@@ -1,5 +1,5 @@
 # ダウンロード
-[こちら](https://drive.google.com/file/d/18eKgunHv56oxsGmuoi_uf5NXYSkFSbnE/view?usp=sharing)のリンクからダウンロードします。容量が83MBあってgithubにアップロードできませんでした。
+[こちら](https://drive.google.com/file/d/1jxZIbeXXMJca6zSsArGFlmtMsuSjPM71/view?usp=sharing)のリンクからダウンロードします。容量が83MBあってgithubにアップロードできませんでした。
 
 # このプログラムについて
 .psdファイルのレイヤーの名前の先頭に「!」や「*」を一括でつけるプログラムです。
@@ -26,6 +26,10 @@
 
 ## ショートカットキー
 プログラムに記載している通りのショートカットキーが使えます。
+
+## 既知の問題
+- 容量がかなり大きいです
+- レイヤー表示領域の大きさは変わりません
 
 # フィードバックについて
 ツイッター( https://twitter.com/662611034 )の方でも受け付けます。
