@@ -2,7 +2,7 @@
 .psdファイルのレイヤーの名前の先頭に「!」や「*」を一括でつけるプログラムです。
 
 # 使い方
-ビルド済みファイル(kigo_tsukeru.exe)を[こちら](https://drive.google.com/file/d/1mCZa8f6gE7RjgOPBicsIUCarv1Y3FHIJ/view?usp=sharing)のリンクからダウンロードします(容量の問題でgithubに上がりませんでした)。   
+ビルド済みファイル(kigo_tsukeru.exe)を[こちら](https://drive.google.com/file/d/18eKgunHv56oxsGmuoi_uf5NXYSkFSbnE/view?usp=sharing)のリンクからダウンロードします(容量の問題でgithubに上がりませんでした)。   
 実行すると以下のようなウィンドウが表示されます。ちなみに立ち上がるまで少々時間を要します。   
 編集したい.psdファイルを開いて適用したい項目を選んで変換すると右側の空間に変換後のレイヤー構造が表示されます。   
 必要な変換が終わったら上書き保存、あるいは別名で保存します。   
