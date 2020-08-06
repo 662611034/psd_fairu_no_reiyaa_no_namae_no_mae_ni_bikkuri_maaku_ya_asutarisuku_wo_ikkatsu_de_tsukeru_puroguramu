@@ -114,7 +114,7 @@ class Top(gui.MainFrame):
 
         if c_class == 3:  # under the layer
             if int(c_depth) > 0:
-                condition = condition and (int(c_depth) == depth+1)
+                condition = condition and (int(c_depth) == depth-1)
 
             if c_match == 0:
                 condition = condition and (c_words in parent.name)
