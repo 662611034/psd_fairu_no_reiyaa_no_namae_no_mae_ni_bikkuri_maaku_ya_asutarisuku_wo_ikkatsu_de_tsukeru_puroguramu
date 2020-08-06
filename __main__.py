@@ -5,7 +5,7 @@ import tkinter.filedialog as fd
 import tkinter.messagebox as mb
 
 tk = gui.tk
-URL = "https://isitchristmas.com"
+URL = "https://github.com/662611034/kigo_tsukeru"
 
 class Top(gui.MainFrame):
 
