@@ -1,5 +1,5 @@
 # ダウンロード
-[こちら](https://drive.google.com/file/d/1jxZIbeXXMJca6zSsArGFlmtMsuSjPM71/view?usp=sharing)のリンクからダウンロードします。容量が83MBあってgithubにアップロードできませんでした。
+[こちら](https://drive.google.com/file/d/1jxZIbeXXMJca6zSsArGFlmtMsuSjPM71/view?usp=sharing)のリンクからダウンロードします。容量がMBあってgithubにアップロードできませんでした。
 
 # このプログラムについて
 .psdファイルのレイヤーの名前の先頭に「!」や「*」を一括でつけるプログラムです。
