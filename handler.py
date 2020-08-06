@@ -34,7 +34,7 @@ class PSDHandler():
     def export_layers(self):
         content = ''
         for layer, parent, depth in self.layer_list():
-            content += ' ' * depth
+            content += str(depth) + ' ' * depth
             if depth:
                 content += '|- '
             content += layer.name + '\n'
