@@ -4,15 +4,15 @@ import tkinter.ttk as ttk
 GUIDE='''
 ctrl+o：ファイルを開く
 
-ctrl+s：上書き保存
-
-ctrl+shift+s：別名で保存
+ctrl+s：上書き保存 | ctrl+shift+s：別名で保存
 
 F5：変換
 
-ctrl+1/2/3/4：変換メニュー選択
+ctrl+z：戻す  |  ctrl+(y/shift+z)：やり直す
 
-F1：配布ページに移動（ウェブブラウザが開きます）
+ctrl+(1/2/3/4)：変換メニュー選択
+
+ctrl+q：終了
 '''
 
 class MainFrame(ttk.Frame):
@@ -68,7 +68,7 @@ class MainFrame(ttk.Frame):
         self.entry_word.bind('<Button-1>', lambda x : self.var_mode.set(0))
         self.entry_word.grid(row=0, column=column, pady=5)
         column += 1
-        self.combo_match = ttk.Combobox(self.subframe_mode[0], values=['を含む', 'と一致する'], state='readonly', width=8)
+        self.combo_match = ttk.Combobox(self.subframe_mode[0], values=['を含む', 'と一致する'], state='readonly', width=10)
         self.combo_match.bind('<Button-1>', lambda x : self.var_mode.set(0))
         self.combo_match.grid(row=0, column=column, pady=5)
         column += 1
@@ -117,10 +117,22 @@ class MainFrame(ttk.Frame):
 
     def make_frame_button(self):
         self.frame_button = ttk.Frame(self.frame_L)
+        self.subframe_button = []
+        for i in range(2):
+            self.subframe_button.append(ttk.Frame(self.frame_button))
+            self.subframe_button[i].grid(row=i, column=0)
 
-        self.button_convert = tk.Button(self.frame_button, text='変換', width=12)
-        self.button_save_same = tk.Button(self.frame_button, text='上書き保存', width=12)
-        self.button_save_diff = tk.Button(self.frame_button, text='別名で保存', width=12)
+        text_tmp = 'なかったことにする'
+        self.button_undo = tk.Button(self.subframe_button[0], state='disabled', text=text_tmp)
+        text_tmp = 'なかったことにしたことをなかったことにする'
+        self.button_redo = tk.Button(self.subframe_button[0], state='disabled', text=text_tmp)
+
+        self.button_convert = tk.Button(self.subframe_button[1], text='変換', width=12)
+        self.button_save_same = tk.Button(self.subframe_button[1], text='上書き保存', width=12)
+        self.button_save_diff = tk.Button(self.subframe_button[1], text='別名で保存', width=12)
+
+        self.button_undo.grid(row=0, column=0, padx=16, pady=5)
+        self.button_redo.grid(row=0, column=1, padx=16, pady=5)
 
         self.button_convert.grid(row=0, column=0, padx=16, pady=5)
         self.button_save_same.grid(row=0, column=1, padx=16, pady=5)
@@ -150,9 +162,10 @@ class MainFrame(ttk.Frame):
     def make_frame_help(self):
         self.frame_help = ttk.Frame(self.frame_L)
         ttk.Label(self.frame_help, text=GUIDE, anchor='w', font=("", 10)).grid(row=0, column=0)
-        self.button_help = tk.Button(self.frame_help, text='ウェブブラウザで配布ページを開く', width=36)
+        self.button_help = tk.Button(\
+                self.frame_help, text='F1：ウェブブラウザで配布ページを開く', width=44, anchor='w')
         self.button_help.grid(row=1, column=0)
-        self.frame_help.pack(padx=12, pady=12)
+        self.frame_help.pack(padx=0, pady=0)
 
     def unlock_text(self, con):
         self.text_layerview.config(state = 'normal' if con else 'disabled')
@@ -190,6 +203,11 @@ class MainFrame(ttk.Frame):
 
     def get_symbol(self):
         return self.combo_symbol.get()
+
+    def unre_state(self, which, state):
+        b = [self.button_undo, self.button_redo]
+        b[which].config(state='normal' if state else 'disabled')
+        return self
 
 if __name__ == '__main__':
     root = tk.Tk()

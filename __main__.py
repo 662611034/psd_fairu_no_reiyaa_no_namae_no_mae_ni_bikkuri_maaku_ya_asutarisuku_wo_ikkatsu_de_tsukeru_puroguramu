@@ -1,4 +1,5 @@
 import webbrowser
+import copy
 import gui
 import handler
 import tkinter.filedialog as fd
@@ -6,6 +7,15 @@ import tkinter.messagebox as mb
 
 tk = gui.tk
 URL = "https://github.com/662611034/kigo_tsukeru"
+LOG_LENGTH = 32
+
+def callback(func):
+    def f_decorated(self, event=None):
+        try:
+            return func(self, event=event)
+        except Exception as e:
+            mb.showerror('エラーが発生しました', str(e))
+    return f_decorated
 
 class Top(gui.MainFrame):
 
@@ -13,30 +23,40 @@ class Top(gui.MainFrame):
         super().__init__(master)
         self.handler = None
         self.bind_funcs()
+        master.bind_all('<Control-q>', lambda event: master.quit())
+        self.log_fore = []
+        self.log_back = []
+        self.logs = [self.log_back, self.log_fore]
 
     def bind_funcs(self):
         self.button_open.config(command = self.open)
-        self.button_convert.config(command = self.convert)
         self.button_save_same.config(command = self.save_same)
         self.button_save_diff.config(command = self.save_diff)
-        self.button_help.config(command = lambda : webbrowser.open(URL))
+        self.button_undo.config(command = self.undo)
+        self.button_redo.config(command = self.redo)
+        self.button_help.config(command = self.open_help)
+        self.button_convert.config(command = self.convert)
 
         self.bind_all('<Control-o>', self.open)
-        self.bind_all('<Key-F5>', self.convert)
         self.bind_all('<Control-s>', self.save_same)
         self.bind_all('<Control-S>', self.save_diff)
-        self.bind_all('<Key-F1>', lambda x :webbrowser.open(URL))
+        self.bind_all('<Control-z>', self.undo)
+        self.bind_all('<Control-Z>', self.redo)
+        self.bind_all('<Control-y>', self.redo)
+        self.bind_all('<Key-F1>', self.open_help)
+        self.bind_all('<Key-F5>', self.convert)
         for i in range(1, 5):
             self.bind_all(f'<Control-Key-{i}>', self.select_mode)
+
         return self
 
-    def open(self, event=None):
+    @callback
+    def open(self, event):
         self.ifile_path = fd.askopenfilename(filetypes=[('psd files', '*.psd')])
         if not self.ifile_path:
             return 'break'
         if self.ifile_path[-4:] != '.psd':
-            mb.showerror('ファイル形式エラー', 'PSDファイルではありません')
-            return 'break'
+            raise Exception('.psdファイルではありません')
 
         self.handler = handler.PSDHandler(self.ifile_path)
         self.def_convert_funcs()
@@ -44,22 +64,27 @@ class Top(gui.MainFrame):
         self.combo_depth.config(values=list(range(self.handler.depth_max+1)))
         self.combo_depth.current(0)
 
+        self.log_fore = []
+        self.log_back = []
+
         self.label_msg.config(text='ファイルを開きました')
         self.label_filename.config(text=self.ifile_path)
-        self.rewrite_text('層  レイヤー名\n\n'+self.handler.export_layers())
+        self.show_layer()
 
-        return 'break'
+        return self
 
-    def save_same(self, event=None):
+    @callback
+    def save_same(self, event):
         if not self.handler:
             mb.showwarning('ファイルがありません', 'まずはファイルを開いてください')
             return 'break'
 
         self.handler.save(self.ifile_path)
         self.label_msg.config(text='保存されました')
-        return 'break'
+        return self
 
-    def save_diff(self, event=None):
+    @callback
+    def save_diff(self, event):
         if not self.handler:
             mb.showwarning('ファイルがありません', 'まずはファイルを開いてください')
             return 'break'
@@ -77,21 +102,51 @@ class Top(gui.MainFrame):
         self.label_msg.config(text='別名で保存されました')
         self.label_filename.config(text=self.ifile_path)
 
-        return 'break'
+        return self
 
-    def convert(self, event=None):
+    @callback
+    def undo(self, event):
+        self.stack_at(self.log_fore)
+        self.pop_from(self.log_back)
+        self.unre_state(1, 1)  # enable redo button
+        if len(self.log_back) == 0:
+            self.unre_state(0, 0)
+        self.show_layer()
+        return self
+
+    @callback
+    def redo(self, event):
+        self.stack_at(self.log_back)
+        self.pop_from(self.log_fore)
+        self.unre_state(0, 1)  # enable redo button
+        if len(self.log_fore) == 0:
+            self.unre_state(1, 0)
+        self.show_layer()
+        return self
+
+    @callback
+    def convert(self, event):
         if not self.handler:
             mb.showwarning('ファイルがありません', 'まずはファイルを開いてください')
             return 'break'
 
+        self.stack_at(self.log_back)
+        self.log_fore = []
+        self.unre_state(0, 1).unre_state(1, 0)
+
         self.convert_funcs[self.get_mode()]()
+        self.show_layer()
+        return self
 
-        self.rewrite_text('層  レイヤー名\n\n'+self.handler.export_layers())
-        return 'break'
-
-    def select_mode(self, event=None):
+    @callback
+    def select_mode(self, event):
         self.var_mode.set(int(event.keysym) - 1)
-        return 'break'
+        return self
+
+    @callback
+    def open_help(self, event):
+        webbrowser.open(URL)
+        return self
 
 # from here, funcs need for conversion
     def def_convert_funcs(self):
@@ -129,6 +184,23 @@ class Top(gui.MainFrame):
             condition = condition and (layer.is_group())
 
         return condition and (not layer.name[0] in ['!', '*'])
+
+    def stack_at(self, log):
+        log.append(copy.deepcopy(self.handler))
+        if len(log) > LOG_LENGTH:
+            log.pop(0)
+        self.def_convert_funcs()
+        return self
+
+    def pop_from(self, log):
+        if log:
+            self.handler = log.pop()
+        self.def_convert_funcs()
+        return self
+
+    def show_layer(self):
+        self.rewrite_text('層  レイヤー名\n\n'+self.handler.export_layers())
+        return self
 
 
 root = tk.Tk()
