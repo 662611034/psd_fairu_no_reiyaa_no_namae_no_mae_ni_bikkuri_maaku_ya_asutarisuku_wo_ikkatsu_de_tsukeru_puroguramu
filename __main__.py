@@ -6,7 +6,7 @@ import tkinter.filedialog as fd
 import tkinter.messagebox as mb
 
 tk = gui.tk
-URL = "https://github.com/662611034/kigo_tsukeru"
+URL = 'https://github.com/662611034/psd_fairu_no_reiyaa_no_namae_no_mae_ni_bikkuri_maaku_ya_asutarisuku_wo_ikkatsu_de_tsukeru_puroguramu'
 LOG_LENGTH = 32
 
 def callback(func):
