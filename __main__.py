@@ -112,27 +112,21 @@ class Top(gui.MainFrame):
         c_depth, c_words, c_match, c_class = self.get_condition()
         condition = True
 
-        if c_class == 3:  # under the layer
-            if c_depth > 0:
-                condition = condition and ((c_depth+1) == depth)
+        select_target = parent if c_class == 3 else layer
+        c_depth_target = c_depth + (1 if c_class == 3 else 0)
 
-            if c_match == 0:
-                condition = condition and (c_words in parent.name)
-            elif c_match == 1:
-                condition = condition and (c_words == parent.name)
-        else:
-            if c_depth > 0:
-                condition = condition and (c_depth == depth)
+        if c_depth > 0:
+            condition = condition and (c_depth_target == depth)
 
-            if c_match == 0:
-                condition = condition and (c_words in layer.name)
-            elif c_match == 1:
-                condition = condition and (c_words == layer.name)
+        if c_match == 0:
+            condition = condition and (c_words in select_target.name)
+        elif c_match == 1:
+            condition = condition and (c_words == select_target.name)
 
-            if c_class == 1:
-                condition = condition and (not layer.is_group())
-            elif c_class == 2:
-                condition = condition and (layer.is_group())
+        if c_class == 1:
+            condition = condition and (not layer.is_group())
+        elif c_class == 2:
+            condition = condition and (layer.is_group())
 
         return condition and (not layer.name[0] in ['!', '*'])
 
