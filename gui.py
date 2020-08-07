@@ -10,7 +10,7 @@ F5：変換
 
 ctrl+z：戻す  |  ctrl+(y/shift+z)：やり直す
 
-ctrl+(1/2/3/4)：変換メニュー選択
+ctrl+(1/2)：変換メニュー選択
 
 ctrl+q：終了
 '''
@@ -41,78 +41,68 @@ class MainFrame(ttk.Frame):
 
     def make_frame_mode(self):
         self.frame_mode = ttk.Frame(self.frame_L)
+        self.subframe_mode = []
+        for i in range(3):
+            self.subframe_mode.append(ttk.Frame(self.frame_mode))
+            self.subframe_mode[i].pack(anchor='w')
 
         self.var_mode = tk.IntVar()
         self.var_mode.set(0)
-        self.subframe_mode = []
         self.radio_mode = []
-        for i in range(4):
-            self.subframe_mode.append(ttk.Frame(self.frame_mode))
+        self.combo_symbol = []
+        for i in range(2):
             self.radio_mode.append(\
-                    ttk.Radiobutton(self.subframe_mode[i], text='', value=i, variable=self.var_mode))
-            self.radio_mode[i].grid(row=0, column=0, padx=5, pady=12)
-            self.subframe_mode[i].bind('<Button-1>', lambda x, i=i: self.var_mode.set(i))
-            self.subframe_mode[i].pack(anchor='w')
+                    ttk.Radiobutton(self.subframe_mode[i+1], text='', value=i, variable=self.var_mode))
+            self.radio_mode[i].grid(row=0, column=0, padx=6, pady=6)
 
-        # subframe 0
-        column = 1
+        # subframe[0]
+        column = 0
         self.combo_depth = ttk.Combobox(self.subframe_mode[0], state='readonly', width=2)
-        self.combo_depth.bind('<Button-1>', lambda x : self.var_mode.set(0))
         self.combo_depth.grid(row=0, column=column, pady=5)
+
         column += 1
-        label_tmp = ttk.Label(self.subframe_mode[0], text='層にある、')
-        label_tmp.bind('<Button-1>', lambda x : self.var_mode.set(0))
-        label_tmp.grid(row=0, column=column, pady=5)
+        ttk.Label(self.subframe_mode[0], text='層にある、').grid(row=0, column=column, pady=5)
+
         column += 1
         self.entry_word = tk.Entry(self.subframe_mode[0], width=12)
-        self.entry_word.bind('<Button-1>', lambda x : self.var_mode.set(0))
         self.entry_word.grid(row=0, column=column, pady=5)
+
         column += 1
         self.combo_match = ttk.Combobox(self.subframe_mode[0], values=['を含む', 'と一致する'], state='readonly', width=10)
-        self.combo_match.bind('<Button-1>', lambda x : self.var_mode.set(0))
         self.combo_match.grid(row=0, column=column, pady=5)
+
         column += 1
-        label_tmp = ttk.Label(self.subframe_mode[0], text='名前の')
-        label_tmp.bind('<Button-1>', lambda x : self.var_mode.set(0))
-        label_tmp.grid(row=0, column=column, pady=5)
+        tk.Label(self.subframe_mode[0], text='名前の').grid(row=0, column=column, pady=5)
         column += 1
+
         self.combo_class = ttk.Combobox(\
                 self.subframe_mode[0], values=['物', 'レイヤー', 'グループ', 'グループの直下の物'], state='readonly', width=18)
-        self.combo_class.bind('<Button-1>', lambda x : self.var_mode.set(0))
         self.combo_class.grid(row=0, column=column, pady=5)
         column += 1
-        label_tmp = ttk.Label(self.subframe_mode[0], text='全てに')
+
+        ttk.Label(self.subframe_mode[0], text='全て').grid(row=0, column=column, pady=5)
+
+        # subframe[1]
+        label_tmp = ttk.Label(self.subframe_mode[1], text='に')
         label_tmp.bind('<Button-1>', lambda x : self.var_mode.set(0))
-        label_tmp.grid(row=0, column=column, pady=5)
-        column += 1
-        self.combo_symbol = ttk.Combobox(self.subframe_mode[0], values=['!', '*'], state='readonly', width=2)
-        self.combo_symbol.bind('<Button-1>', lambda x : self.var_mode.set(0))
-        self.combo_symbol.grid(row=0, column=column, pady=5)
-        column += 1
-        label_tmp = ttk.Label(self.subframe_mode[0], text='をつける')
+        label_tmp.grid(row=0, column=1, pady=5)
+        self.combo_symbol = ttk.Combobox(self.subframe_mode[1], values=['!', '*'], state='readonly', width=2)
+        self.combo_symbol.bind('<Button-1>', lambda x: self.var_mode.set(0))
+        self.combo_symbol.grid(row=0, column=2, padx=6, pady=6)
+        label_tmp = ttk.Label(self.subframe_mode[1], text='をつける')
         label_tmp.bind('<Button-1>', lambda x : self.var_mode.set(0))
-        label_tmp.grid(row=0, column=column, pady=5)
+        label_tmp.grid(row=0, column=3, pady=5)
+        
+        # subframe[2]
+        label_tmp = ttk.Label(self.subframe_mode[2], text='から「!」と「*」を消す')
+        label_tmp.bind('<Button-1>', lambda x : self.var_mode.set(1))
+        label_tmp.grid(row=0, column=1, pady=5)
         
         self.combo_match.current(0)
         self.combo_class.current(0)
         self.combo_symbol.current(0)
 
-        # subframe 1
-        label_tmp = ttk.Label(self.subframe_mode[1], text='最上位階層の全ての物に「!」をつける')
-        label_tmp.bind('<Button-1>', lambda x : self.var_mode.set(1))
-        label_tmp.grid(row=0, column=1)
-
-        # subframe 1
-        label_tmp = ttk.Label(self.subframe_mode[2], text='階層2の全ての物に「*」をつける')
-        label_tmp.bind('<Button-1>', lambda x : self.var_mode.set(2))
-        label_tmp.grid(row=0, column=1)
-
-        # subframe 3
-        label_tmp = ttk.Label(self.subframe_mode[3], text='頭の「！」と「＊」を全て消す')
-        label_tmp.bind('<Button-1>', lambda x : self.var_mode.set(3))
-        label_tmp.grid(row=0, column=1)
-
-        self.frame_mode.pack()
+        self.frame_mode.pack(pady=6)
         return self
 
     def make_frame_button(self):
@@ -138,7 +128,7 @@ class MainFrame(ttk.Frame):
         self.button_save_same.grid(row=0, column=1, padx=16, pady=5)
         self.button_save_diff.grid(row=0, column=2, padx=16, pady=5)
 
-        self.frame_button.pack()
+        self.frame_button.pack(pady=6)
         return self
 
     def make_frame_show(self):
@@ -163,7 +153,7 @@ class MainFrame(ttk.Frame):
         self.frame_help = ttk.Frame(self.frame_L)
         ttk.Label(self.frame_help, text=GUIDE, anchor='w', font=("", 10)).grid(row=0, column=0)
         self.button_help = tk.Button(\
-                self.frame_help, text='F1：ウェブブラウザで配布ページを開く', width=44, anchor='w')
+                self.frame_help, text='F1：ウェブブラウザで配布ページを開く', width=36, anchor='w')
         self.button_help.grid(row=1, column=0)
         self.frame_help.pack(padx=0, pady=0)
 
@@ -191,7 +181,7 @@ class MainFrame(ttk.Frame):
         return self
 
     def get_mode(self):
-        # return 1~4 in int
+        # return 0 or 1 in int
         return self.var_mode.get()
 
     def get_condition(self):

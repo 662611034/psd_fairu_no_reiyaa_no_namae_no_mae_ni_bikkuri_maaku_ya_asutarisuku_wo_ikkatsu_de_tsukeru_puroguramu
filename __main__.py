@@ -8,6 +8,7 @@ import tkinter.messagebox as mb
 tk = gui.tk
 URL = 'https://github.com/662611034/psd_fairu_no_reiyaa_no_namae_no_mae_ni_bikkuri_maaku_ya_asutarisuku_wo_ikkatsu_de_tsukeru_puroguramu'
 LOG_LENGTH = 32
+LIST_SYMBOL = ('!', '*')
 
 def callback(func):
     def f_decorated(self, event=None):
@@ -45,7 +46,7 @@ class Top(gui.MainFrame):
         self.bind_all('<Control-y>', self.redo)
         self.bind_all('<Key-F1>', self.open_help)
         self.bind_all('<Key-F5>', self.convert)
-        for i in range(1, 5):
+        for i in range(1, 3):
             self.bind_all(f'<Control-Key-{i}>', self.select_mode)
 
         return self
@@ -133,16 +134,9 @@ class Top(gui.MainFrame):
         self.log_fore = []
         self.unre_state(0, 1).unre_state(1, 0)
 
-        # self.convert_funcs[self.get_mode()]()
-        mode = self.get_mode()
-        if mode == 0:
-            self.add_symbol()
-        elif mode == 1:
-            self.handler.add_bikkuri_1st()
-        elif mode == 2:
-            self.handler.add_star_2nd()
-        elif mode == 3:
-            self.handler.erase_symbol_all()
+        for layer, depth in self.handler.layer_list():
+            if self.make_condition(layer, depth):
+                self.convert_subfunction(layer, self.get_mode())
 
         self.show_layer()
         return self
@@ -158,6 +152,16 @@ class Top(gui.MainFrame):
         return self
 
 # from here, funcs need for conversion
+    def convert_subfunction(self, layer, mode):
+        if mode == 0 and not(layer.name[0] in LIST_SYMBOL):
+            layer.name = self.combo_symbol.get() + layer.name
+        elif mode == 1:
+            name = layer.name
+            while name[0:1] in LIST_SYMBOL:
+                name = name[1:]
+            layer.name = name
+        return self
+
     def add_symbol(self):
         for layer, depth in self.handler.layer_list():
             if self.make_condition(layer, depth):
@@ -184,7 +188,7 @@ class Top(gui.MainFrame):
         elif c_class == 2:
             condition = condition and (layer.is_group())
 
-        return condition and (not layer.name[0] in ['!', '*'])
+        return condition
 
     def stack_at(self, log):
         log.append(copy.deepcopy(self.handler))
