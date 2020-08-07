@@ -1,5 +1,4 @@
 from psd_tools import PSDImage
-import re
 
 class PSDHandler():
 
@@ -54,9 +53,10 @@ class PSDHandler():
 
     def erase_symbol_all(self):
         for layer, _, _ in self.layer_list():
-            match_sym = re.match('(\*|\!)+', layer.name)
-            if match_sym:
-                layer.name = layer.name[match_sym.end():]
+            name_new = layer.name
+            while name_new[0:1] in ('!', '*'):
+                name_new = name_new[1:]
+            layer.name = name_new
         return self
 
 
