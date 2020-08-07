@@ -59,7 +59,6 @@ class Top(gui.MainFrame):
             raise Exception('.psdファイルではありません')
 
         self.handler = handler.PSDHandler(self.ifile_path)
-        self.def_convert_funcs()
 
         self.combo_depth.config(values=list(range(self.handler.depth_max+1)))
         self.combo_depth.current(0)
@@ -134,7 +133,17 @@ class Top(gui.MainFrame):
         self.log_fore = []
         self.unre_state(0, 1).unre_state(1, 0)
 
-        self.convert_funcs[self.get_mode()]()
+        # self.convert_funcs[self.get_mode()]()
+        mode = self.get_mode()
+        if mode == 0:
+            self.add_symbol()
+        elif mode == 1:
+            self.handler.add_bikkuri_1st()
+        elif mode == 2:
+            self.handler.add_star_2nd()
+        elif mode == 3:
+            self.handler.erase_symbol_all()
+
         self.show_layer()
         return self
 
@@ -149,14 +158,6 @@ class Top(gui.MainFrame):
         return self
 
 # from here, funcs need for conversion
-    def def_convert_funcs(self):
-        self.convert_funcs = []
-        self.convert_funcs.append(self.add_symbol)
-        self.convert_funcs.append(self.handler.add_bikkuri_1st)
-        self.convert_funcs.append(self.handler.add_star_2nd)
-        self.convert_funcs.append(self.handler.erase_symbol_all)
-        return self
-
     def add_symbol(self):
         for layer, parent, depth in self.handler.layer_list():
             if self.make_condition(layer, parent, depth):
@@ -189,13 +190,11 @@ class Top(gui.MainFrame):
         log.append(copy.deepcopy(self.handler))
         if len(log) > LOG_LENGTH:
             log.pop(0)
-        self.def_convert_funcs()
         return self
 
     def pop_from(self, log):
         if log:
             self.handler = log.pop()
-        self.def_convert_funcs()
         return self
 
     def show_layer(self):
