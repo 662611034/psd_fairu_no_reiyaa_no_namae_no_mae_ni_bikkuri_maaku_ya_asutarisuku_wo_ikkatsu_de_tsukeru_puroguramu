@@ -1,5 +1,5 @@
 # ダウンロード
-[こちら](https://drive.google.com/file/d/1TT511MpYgO7yTWXClm4BHvN2bvpA3hUr/view?usp=sharing)のリンクからダウンロードします。容量が83MBあってgithubにアップロードできませんでした。
+[こちら](https://drive.google.com/file/d/1QOtrYraZOFFy9SuCn0YoWNfRjK2iNef1/view?usp=sharing)のリンクからダウンロードします。容量が83MBあってgithubにアップロードできませんでした。
 
 # このプログラムについて
 .psdファイルのレイヤーの名前の先頭に「!」や「\*」を一括でつけるプログラムです。
@@ -8,19 +8,23 @@
 64bitのWindows10での動作を確認できました。ビルドに用いたツールの仕様上32bit Windowsでは動作しません。   
 
 ## アップデート履歴
-- 2020.08.06
+- [2020.08.06](https://drive.google.com/file/d/1jxZIbeXXMJca6zSsArGFlmtMsuSjPM71/view?usp=sharing)
   - 初版をアップロードしました
-- 2020.08.07
+- [2020.08.07](https://drive.google.com/file/d/1TT511MpYgO7yTWXClm4BHvN2bvpA3hUr/view?usp=sharing)
   - 「戻す」「やり直す」機能を実装しました
   - 正規表現パッケージを使わないようにしました
   - GUIにボタンを追加したり、ウィジェットの大きさを変えるなどの変更を加えました
+- [2020.08.08](https://drive.google.com/file/d/1QOtrYraZOFFy9SuCn0YoWNfRjK2iNef1/view?usp=sharing)
+  - 固定条件の変換メニューを廃止しました
+  - 削除対象も条件を指定できるようにしました
+  - 以上に伴いGUIに変更を加えました
   
 # 使い方
 ダウンロードした.exeを実行すると以下のようなウィンドウが表示されます。ちなみに立ち上がるまで少々時間を要します。   
 編集したい.psdファイルを開いて適用したい項目を選んで変換すると右側の空間に変換後のレイヤー構造が表示されます。   
 必要な変換が終わったら上書き保存、あるいは別名で保存します。   
 
-![cap](https://user-images.githubusercontent.com/48207892/89622290-cb5d3500-d8cd-11ea-8535-e8a2bc1671e9.PNG)
+![Ee0p7qUU0AAE3uU](https://user-images.githubusercontent.com/48207892/89659491-f023cd80-d90a-11ea-82ce-8059d65f4f5c.png)
 
 ## 変換メニューについて
 大体文章に書いてあるそのままの変換を行います。   
