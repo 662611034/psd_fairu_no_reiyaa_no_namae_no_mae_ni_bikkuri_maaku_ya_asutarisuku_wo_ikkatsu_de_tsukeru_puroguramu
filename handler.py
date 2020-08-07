@@ -8,7 +8,7 @@ class PSDHandler():
 
     def find_depth_max(self):
         depth_max = 0
-        for _, _, depth in self.layer_list():
+        for _, depth in self.layer_list():
             if depth > depth_max:
                 depth_max = depth
         return depth_max
@@ -17,22 +17,18 @@ class PSDHandler():
         self.psd.save(ofile_path)
         return self
 
-    def layer_list(self):
-        for layer in self.psd:
-            for element in self.layer_sweeper(layer, self.psd, 1):
-                yield element
-
-    @staticmethod
-    def layer_sweeper(layer, parent, depth=1):
-        yield layer, parent, depth
-        if layer.is_group():
-            for sublayer in layer:
-                for element in PSDHandler.layer_sweeper(sublayer, layer, depth+1):
-                    yield element
+    def layer_list(self, layer=None, depth=1):
+        if layer is None:
+            layer = self.psd
+        for sublayer in layer:
+            yield sublayer, depth
+            if sublayer.is_group():
+                for subdata in self.layer_list(sublayer, depth+1):
+                    yield subdata
 
     def export_layers(self):
         content = ''
-        for layer, parent, depth in self.layer_list():
+        for layer, depth in self.layer_list():
             content += str(depth) + ' ' * 2 * depth
             if depth > 1:
                 content += '|-  '
@@ -40,27 +36,32 @@ class PSDHandler():
         return content
 
     def add_bikkuri_1st(self):
-        for layer, parent, depth in self.layer_list():
+        for layer, depth in self.layer_list():
             if depth == 1 and layer.name[0] != "!":
                 layer.name = "!" + layer.name
         return self
 
     def add_star_2nd(self):
-        for layer, parent, depth in self.layer_list():
+        for layer, depth in self.layer_list():
             if depth == 2 and layer.name[0] != "*":
                 layer.name = "*" + layer.name
         return self
 
     def erase_symbol_all(self):
-        for layer, _, _ in self.layer_list():
+        for layer, _ in self.layer_list():
             name_new = layer.name
             while name_new[0:1] in ('!', '*'):
                 name_new = name_new[1:]
             layer.name = name_new
         return self
 
+    def layer_fullpath(self, layer, path = ''):
+        fullpath = layer.name + path
+        if layer._parent is self.psd:
+            return fullpath
+        else:
+            return self.layer_fullpath(layer._parent, '/' + fullpath)
 
 if __name__ == '__main__':
-    ifile = './im5467479.psd'
+    ifile = './sample.psd'
     ctrl = PSDHandler(ifile)
-    print(ctrl.export_layers())

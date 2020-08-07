@@ -159,16 +159,16 @@ class Top(gui.MainFrame):
 
 # from here, funcs need for conversion
     def add_symbol(self):
-        for layer, parent, depth in self.handler.layer_list():
-            if self.make_condition(layer, parent, depth):
+        for layer, depth in self.handler.layer_list():
+            if self.make_condition(layer, depth):
                 layer.name = self.get_symbol() + layer.name
         return self
 
-    def make_condition(self, layer, parent, depth):
+    def make_condition(self, layer, depth):
         c_depth, c_words, c_match, c_class = self.get_condition()
         condition = True
 
-        select_target = parent if c_class == 3 else layer
+        select_target = layer._parent if c_class == 3 else layer
         c_depth_target = c_depth + (1 if c_class == 3 else 0)
 
         if c_depth > 0:
