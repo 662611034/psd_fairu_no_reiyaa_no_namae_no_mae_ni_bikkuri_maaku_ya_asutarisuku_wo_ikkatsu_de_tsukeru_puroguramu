@@ -35,16 +35,10 @@ class PSDHandler():
             content += '[' + layer.name + ']\n'
         return content
 
-    def add_bikkuri_1st(self):
+    def add_symbol(self, symbol, depth_target, exceptlist=['!', '*']):
         for layer, depth in self.layer_list():
-            if depth == 1 and layer.name[0] != "!":
-                layer.name = "!" + layer.name
-        return self
-
-    def add_star_2nd(self):
-        for layer, depth in self.layer_list():
-            if depth == 2 and layer.name[0] != "*":
-                layer.name = "*" + layer.name
+            if depth == depth_target and (not layer.name[0] in exceptlist):
+                layer.name = symbol + layer.name
         return self
 
     def erase_symbol_all(self):
@@ -55,7 +49,7 @@ class PSDHandler():
             layer.name = name_new
         return self
 
-    def layer_fullpath(self, layer, path = ''):
+    def layer_fullpath(self, layer, path=''):
         fullpath = layer.name + path
         if layer._parent is self.psd:
             return fullpath
@@ -65,3 +59,5 @@ class PSDHandler():
 if __name__ == '__main__':
     ifile = './sample.psd'
     ctrl = PSDHandler(ifile)
+    ctrl.add_symbol('piyopiyo', 2)
+    print(ctrl.export_layers())
