@@ -1,5 +1,5 @@
 # ダウンロード
-[こちら](https://drive.google.com/file/d/1o9iAOm7YzKWD_353Jui339XMydosRV6g/view?usp=sharing)のリンクからダウンロードします。容量が83MBあってgithubにアップロードできませんでした。   
+最新版は[こちら](https://drive.google.com/file/d/1o9iAOm7YzKWD_353Jui339XMydosRV6g/view?usp=sharing)のリンクからダウンロードできます。容量が83MBあってgithubにアップロードできませんでした。   
 過去バージョンはアップデート履歴からダウンロードできます。
 
 # このプログラムについて
