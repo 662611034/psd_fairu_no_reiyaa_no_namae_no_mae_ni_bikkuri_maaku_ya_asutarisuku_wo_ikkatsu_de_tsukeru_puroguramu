@@ -1,4 +1,6 @@
 from psd_tools import PSDImage
+import tkinter as tk
+import tkinter.ttk as ttk
 
 class PSDHandler():
 
@@ -56,8 +58,64 @@ class PSDHandler():
         else:
             return self.layer_fullpath(layer._parent, '/' + fullpath)
 
+
+class LayerCL(ttk.Frame):
+    def __init__(self, master, hanlder, width=240, height=720):
+        super().__init__(master)
+
+        self.handler = handler
+        self.canvas = tk.Canvas(self, width=width, height=height)
+        self.frame_widgets = ttk.Frame(self.canvas)
+
+        self.dict_widgets = {}
+        self.make_widgets()
+
+        self.make_canvas()
+
+    def make_canvas(self):
+        self.scroll_x = tk.Scrollbar(self, orient='horizontal', command=self.canvas.xview)
+        self.scroll_y = tk.Scrollbar(self, orient='vertical', command=self.canvas.yview)
+        self.canvas.configure(yscrollcommand=self.scroll_y.set, xscrollcommand=self.scroll_x.set)
+
+        self.canvas.create_window(0, 0, window=self.frame_widgets)
+        self.canvas.update_idletasks()
+        self.canvas.configure(scrollregion=self.canvas.bbox('all'))
+
+        self.canvas.yview_moveto('0.0')
+        self.canvas.grid(row=0, column=0)
+        self.scroll_x.grid(row=1, column=0, sticky='ew')
+        self.scroll_y.grid(row=0, column=1, sticky='ns')
+
+    def make_widgets(self):
+        for layer, depth in self.handler.layer_list():
+            frame_tmp = ttk.Frame(self.frame_widgets)
+            ttk.Label(frame_tmp, text=' ' * 6 * depth + '|-').grid(row=0, column=0, padx=0, pady=2)
+            bool_tmp = tk.BooleanVar()
+            bool_tmp.set(False)
+            check_tmp = tk.Checkbutton(frame_tmp, variable=bool_tmp)
+            check_tmp.grid(row=0, column=1, padx=0, pady=2)
+            check_tmp.bind('<Button-1>', self.make_fclicked(layer))
+            entry_tmp = tk.Entry(frame_tmp, width=12)
+            entry_tmp.insert(0, layer.name)
+            entry_tmp.grid(row=0, column=2, padx=0, pady=2)
+            self.dict_widgets[layer] = {'bool': bool_tmp, 'entry': entry_tmp}
+            frame_tmp.pack(anchor='w')
+        return self
+
+    def make_fclicked(self, layer):
+        def clicked(event=None):
+            # event.state: click-8, shift click-9, ctrl shict click=13
+            bool_got = self.dict_widgets[layer]['bool'].get()
+            if event.state == 8:
+                checkrange = []
+            elif event.state == 9:
+                checkrange = layer
+            elif event.state == 13:
+                checkrange = [sublayer for sublayer, _ in self.handler.layer_list(layer)]
+            for sublayer in checkrange:
+                self.dict_widgets[sublayer]['bool'].set(not bool_got)
+        return clicked
+
 if __name__ == '__main__':
     ifile = './sample.psd'
-    ctrl = PSDHandler(ifile)
-    ctrl.add_symbol('piyopiyo', 2)
-    print(ctrl.export_layers())
+    handler = PSDHandler(ifile)

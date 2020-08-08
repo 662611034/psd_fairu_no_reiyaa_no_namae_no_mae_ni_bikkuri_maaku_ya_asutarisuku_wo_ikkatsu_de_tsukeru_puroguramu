@@ -135,16 +135,16 @@ class MainFrame(ttk.Frame):
         self.frame_show = ttk.Frame(self.frame_R)
 
         self.text_layerview = tk.Text(self.frame_show, width=48, height=40, state='disabled')
-        self.scroll_layerview_v = ttk.Scrollbar(\
+        self.scroll_layerview_y = ttk.Scrollbar(\
                 self.frame_show, orient = 'vertical', command = self.text_layerview.yview)
-        self.text_layerview.config(yscrollcommand = self.scroll_layerview_v.set)
-        self.scroll_layerview_h = ttk.Scrollbar(\
+        self.text_layerview.config(yscrollcommand = self.scroll_layerview_y.set)
+        self.scroll_layerview_x = ttk.Scrollbar(\
                 self.frame_show, orient = 'horizontal', command = self.text_layerview.xview)
-        self.text_layerview.config(xscrollcommand = self.scroll_layerview_h.set)
+        self.text_layerview.config(xscrollcommand = self.scroll_layerview_x.set)
 
         self.text_layerview.grid(row=0, column=0, padx=0, pady=0)
-        self.scroll_layerview_v.grid(row=0, column=1, padx=0, pady=0, sticky='ns')
-        self.scroll_layerview_h.grid(row=1, column=0, padx=0, pady=0, sticky='ew')
+        self.scroll_layerview_y.grid(row=0, column=1, padx=0, pady=0, sticky='ns')
+        self.scroll_layerview_x.grid(row=1, column=0, padx=0, pady=0, sticky='ew')
 
         self.frame_show.pack()
         return self

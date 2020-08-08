@@ -202,7 +202,11 @@ class Top(gui.MainFrame):
         return self
 
     def show_layer(self):
+        y_position = str(self.scroll_layerview_y.get()[0])
+        x_position = str(self.scroll_layerview_x.get()[0])
         self.rewrite_text('層  レイヤー名\n\n'+self.handler.export_layers())
+        self.text_layerview.yview_moveto(y_position)
+        self.text_layerview.xview_moveto(x_position)
         return self
 
 
