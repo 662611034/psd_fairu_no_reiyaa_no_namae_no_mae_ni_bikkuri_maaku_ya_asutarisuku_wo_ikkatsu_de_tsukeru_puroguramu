@@ -86,6 +86,9 @@ class LayerCL(ttk.Frame):
         self.scroll_x.grid(row=1, column=0, sticky='ew')
         self.scroll_y.grid(row=0, column=1, sticky='ns')
 
+        self.scroll_x.bind_all('<Shift-MouseWheel>', lambda event: self.canvas.xview_scroll(-1*event.delta//120, 'units'))
+        self.scroll_y.bind_all('<MouseWheel>', lambda event: self.canvas.yview_scroll(-1*event.delta//120, 'units'))
+
     def make_widgets(self):
         for layer, depth in self.handler.layer_list():
             frame_tmp = ttk.Frame(self.frame_widgets)
@@ -106,16 +109,19 @@ class LayerCL(ttk.Frame):
         def clicked(event=None):
             # event.state: click-8, shift click-9, ctrl shict click=13
             bool_got = self.dict_widgets[layer]['bool'].get()
-            if event.state == 8:
-                checkrange = []
-            elif event.state == 9:
+            if event.state == 9 and layer.is_group():
                 checkrange = layer
-            elif event.state == 13:
+            elif event.state == 13 and layer.is_group():
                 checkrange = [sublayer for sublayer, _ in self.handler.layer_list(layer)]
+            else:
+                checkrange = []
             for sublayer in checkrange:
                 self.dict_widgets[sublayer]['bool'].set(not bool_got)
         return clicked
 
 if __name__ == '__main__':
-    ifile = './sample.psd'
+    ifile = r'./sample.psd'
     handler = PSDHandler(ifile)
+    root = tk.Tk()
+    LayerCL(root, handler).pack()
+    root.mainloop()
