@@ -90,17 +90,18 @@ class LayerCL(ttk.Frame):
         self.scroll_y.bind_all('<MouseWheel>', lambda event: self.canvas.yview_scroll(-1*event.delta//120, 'units'))
 
     def make_widgets(self):
+        ttk.Label(self.frame_widgets, text='層  レイヤー名', anchor='w').pack(anchor='w')
         for layer, depth in self.handler.layer_list():
             frame_tmp = ttk.Frame(self.frame_widgets)
-            ttk.Label(frame_tmp, text=' ' * 6 * depth + '|-').grid(row=0, column=0, padx=0, pady=2)
+            ttk.Label(frame_tmp, text=str(depth) + ' ' * 4 * depth + '|-').grid(row=0, column=0)
             bool_tmp = tk.BooleanVar()
             bool_tmp.set(False)
             check_tmp = tk.Checkbutton(frame_tmp, variable=bool_tmp)
-            check_tmp.grid(row=0, column=1, padx=0, pady=2)
+            check_tmp.grid(row=0, column=1)
             check_tmp.bind('<Button-1>', self.make_fclicked(layer))
             entry_tmp = tk.Entry(frame_tmp, width=12)
             entry_tmp.insert(0, layer.name)
-            entry_tmp.grid(row=0, column=2, padx=0, pady=2)
+            entry_tmp.grid(row=0, column=2)
             self.dict_widgets[layer] = {'bool': bool_tmp, 'entry': entry_tmp}
             frame_tmp.pack(anchor='w')
         return self
@@ -121,7 +122,9 @@ class LayerCL(ttk.Frame):
 
 if __name__ == '__main__':
     ifile = r'./sample.psd'
+    ifile = r'C:\Users\user\Pictures\sample.psd'
     handler = PSDHandler(ifile)
     root = tk.Tk()
-    LayerCL(root, handler).pack()
+    # tk.Button(root, text='jaks', command = lambda : LayerCL(root, handler).pack()).pack()
+    LayerCL(root, handler).pack(padx=10, pady=10)
     root.mainloop()

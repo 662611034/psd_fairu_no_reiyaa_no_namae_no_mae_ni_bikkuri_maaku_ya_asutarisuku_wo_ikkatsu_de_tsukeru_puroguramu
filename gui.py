@@ -199,8 +199,40 @@ class MainFrame(ttk.Frame):
         b[which].config(state='normal' if state else 'disabled')
         return self
 
+
+class TkWithMenu(tk.Tk):
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.make_menu()
+
+    def make_menu(self):
+        self.menu_root = tk.Menu(self)
+
+        self.menu_file = tk.Menu(self.menu_root, tearoff=0)
+        self.menu_file.add_command(label='開く', accelerator='Ctrl+O')
+        self.menu_file.add_command(label='上書き保存', accelerator='Ctrl+s')
+        self.menu_file.add_command(label='別名で保存', accelerator='Ctrl+Shift+s')
+        self.menu_file.add_separator()
+        self.menu_file.add_command(label='終了', accelerator='Ctrl+q')
+
+        self.menu_edit = tk.Menu(self.menu_root, tearoff=0)
+        self.menu_edit.add_command(label='変換', accelerator='F5')
+        self.menu_edit.add_separator()
+        self.menu_edit.add_command(label='戻す', accelerator='Ctrl+z')
+        self.menu_edit.add_command(label='やり直す', accelerator='Ctrl+y / Ctrl+Shift+z')
+
+        self.menu_help= tk.Menu(self.menu_root, tearoff=0)
+        self.menu_help.add_command(label='githubページを開く', accelerator='F1')
+
+        self.menu_root.add_cascade(label='ファイル', menu=self.menu_file)
+        self.menu_root.add_cascade(label='編集', menu=self.menu_edit)
+        self.menu_root.add_cascade(label='ヘルプ', menu=self.menu_help)
+
+        self.config(menu=self.menu_root)
+        return self
+
 if __name__ == '__main__':
-    root = tk.Tk()
+    root = TkWithMenu()
     root.title('PSDのレイヤー名変換')
     x = MainFrame(root)
     x.pack()
