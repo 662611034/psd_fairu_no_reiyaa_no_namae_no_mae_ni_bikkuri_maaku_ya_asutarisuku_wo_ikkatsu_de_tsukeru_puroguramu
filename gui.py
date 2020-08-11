@@ -164,7 +164,7 @@ class CtrlFrame(ttk.Frame):
         label_tmp = ttk.Label(self.subframe_action[0], text='に')
         label_tmp.bind('<Button-1>', lambda x : self.var_action.set(0))
         label_tmp.grid(row=0, column=1, pady=5)
-        self.combo_symbol = ttk.Combobox(self.subframe_action[0], values=['!', '*'], state='readonly', width=2)
+        self.combo_symbol = ttk.Combobox(self.subframe_action[0], values=['!', '*'], state='readonly', width=4)
         self.combo_symbol.bind('<Button-1>', lambda x: self.var_action.set(0))
         self.combo_symbol.grid(row=0, column=2, padx=6, pady=6)
         label_tmp = ttk.Label(self.subframe_action[0], text='をつける')

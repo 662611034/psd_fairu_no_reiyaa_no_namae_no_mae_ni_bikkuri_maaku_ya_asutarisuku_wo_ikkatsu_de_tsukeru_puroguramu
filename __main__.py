@@ -1,4 +1,5 @@
 import webbrowser
+import os
 import copy
 import gui
 import handler
@@ -75,6 +76,9 @@ class AppTop(gui.TkWithMenu):
         for i in range(1, 5):
             self.bind_all(f'<Control-Key-{i}>', self.mode_select)
 
+        self.bind_all('<exclam>', lambda event: self.frame_ctrl.combo_symbol.current(0))
+        self.bind_all('<asterisk>', lambda event: self.frame_ctrl.combo_symbol.current(1))
+
         return self
 
 # callback from here
@@ -136,10 +140,15 @@ class AppTop(gui.TkWithMenu):
             mb.showwarning('ファイルがありません', 'まずはファイルを開いてください')
             return 'break'
 
-        self.export_subfunc(self.ifile_path[:-4] + '.anm')
+        efile_path = self.ifile_path[:-4] + '.anm'
+        if os.path.isfile(efile_path):
+            if not mb.askyesno('同名ファイルを確認', f'{efile_path}が既に存在しています\n上書きしますか？'):
+                self.frame_ctrl.label_msg.config(text='.anmファイルの出力をキャンセルしました')
+                return self
+
+        self.export_subfunc(efile_path)
         self.frame_ctrl.label_msg.config(text='.anmファイルを出力しました')
         # webbrowser.open(self.ifile_path[:-4] + '.anm')
-        webbrowser.open('C:\\')
 
         return self
 
@@ -201,9 +210,9 @@ class AppTop(gui.TkWithMenu):
     def mode_select(self, event):
         num = int(event.keysym)
         if num < 3:
-            self.var_select.set(int(event.keysym) - 1)
+            self.frame_ctrl.var_select.set(int(event.keysym) - 1)
         else:
-            self.var_action.set(int(event.keysym) - 3)
+            self.frame_ctrl.var_action.set(int(event.keysym) - 3)
         return self
 
     @callback
@@ -379,12 +388,13 @@ class AppTop(gui.TkWithMenu):
             else:
                 checkrange = []
             for sublayer in checkrange:
-                self.dict_widgets[id(sublayer)]['bool'].set(not bool_got)
+                self.dict_widgets[id(sublayer)]['bool'].set(bool_got)
         return func_clicked
 
 
 root = AppTop()
 ifile_path = './sample.psd'
 ifile_path = r'C:\Users\user\Pictures\sample.psd'
-root.open_subfunc(ifile_path)
+root.bind_all('<asterisk>', lambda event: root.frame_ctrl.combo_symbol.current(1))
+# root.open_subfunc(ifile_path)
 root.mainloop()
