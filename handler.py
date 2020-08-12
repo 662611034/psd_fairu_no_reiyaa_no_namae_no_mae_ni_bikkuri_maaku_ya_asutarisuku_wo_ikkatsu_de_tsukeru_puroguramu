@@ -61,12 +61,15 @@ class PSDHandler():
 
     def export_anmscript(self, layer, tracknum=0):
         if not layer.is_group():
-            return ''
+            return '\n', '\n'
+
         trackline = f'--track{tracknum}:{layer.name},0,{len(layer)},0,1\n'
         valueline = 'local values = {\n'
         for sublayer in layer:
             valueline += f'  "v1.{self.layer_fullpath(sublayer)}",\n'
-        valueline += '}\n' + f'PSD:addstate(values, obj.track{tracknum})\n'
+        valueline += '}\n'
+        valueline += f'PSD:addstate(values, obj.track{tracknum})\n'
+
         return trackline, valueline
 
 
@@ -76,5 +79,6 @@ if __name__ == '__main__':
     ifile = r'C:\Users\user\Pictures\sample.psd'
     handler = PSDHandler(ifile)
     x = {handler.psd[0]: 1}
-    print(handler.psd[2].is_group())
-    print(handler.export_sublayer_anm(handler.psd[2], 1))
+    print(handler.psd[0].is_group())
+    for i in handler.psd[0]:
+        print(i)

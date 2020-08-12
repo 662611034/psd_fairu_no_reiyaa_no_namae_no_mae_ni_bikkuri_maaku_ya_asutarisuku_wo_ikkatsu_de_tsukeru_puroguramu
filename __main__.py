@@ -12,7 +12,7 @@ URL = 'https://github.com/662611034/psd_fairu_no_reiyaa_no_namae_no_mae_ni_bikku
 
 
 class Logger():
-    def __init__(self, length=65536):
+    def __init__(self, length=256):
         self.log_length = length
         self.logs = [[], []]  # 0: back, 1: fore
 
@@ -33,67 +33,83 @@ class Logger():
         return False if self.logs[which] else True
 
 
-class AppTop(gui.TkWithMenu):
+class AppTop(gui.RootWindow):
 
     def __init__(self,*args):
         super().__init__(*args)
+
         self.handler = None
         self.logger = Logger()
-        self.dict_widgets = {}
         self.dict_names = {}
 
         self.bind_funcs()
-        self.title('.psdファイルのレイヤーの名前の前に「!」や「*」を一括でつけるプログラム')
 
     def bind_funcs(self):
-        self.menu_file.entryconfig(0, command=self.open)
-        self.menu_file.entryconfig(1, command=self.save_same)
-        self.menu_file.entryconfig(2, command=self.save_diff)
-        self.menu_file.entryconfig(3, command=self.export)
-        self.menu_file.entryconfig(5, command=self.quit)
+        f_open = self.make_callback(self.open_file)
+        f_save = [self.make_callback(self.save_file, i) for i in range(2)]
+        f_expo = [self.make_callback(self.export_script, i) for i in range(2)]
 
-        self.menu_edit.entryconfig(0, command=self.convert)
-        self.menu_edit.entryconfig(1, command=self.undo)
-        self.menu_edit.entryconfig(2, command=self.redo)
+        f_conv = [self.make_callback(self.convert, i) for i in range(3)]
+        f_unre = [self.make_callback(self.undoredo, i) for i in range(2)]
 
-        self.menu_help.entryconfig(0, command=self.open_help)
-        self.menu_help.entryconfig(1, command=self.open_github)
+        f_clea = [self.make_callback(self.deal_anmlayer, i+1) for i in range(2)]
 
-        self.frame_ctrl.button_convert.config(command=self.convert)
-        self.frame_ctrl.button_export.config(command=self.export)
+        self.menu_file.entryconfig(0, command=f_open)
+        self.menu_file.entryconfig(1, command=f_save[0])
+        self.menu_file.entryconfig(2, command=f_save[1])
+        self.menu_file.entryconfig(4, command=f_expo[0])
+        self.menu_file.entryconfig(5, command=f_expo[1])
+        self.menu_file.entryconfig(7, command=self.quit)
 
-        self.bind_all('<Control-o>', self.open)
-        self.bind_all('<Control-s>', self.save_same)
-        self.bind_all('<Control-S>', self.save_diff)
-        self.bind_all('<Control-e>', self.export)
-        self.bind_all('<Key-F5>', self.convert)
-        self.bind_all('<Control-z>', self.undo)
-        self.bind_all('<Control-Z>', self.redo)
-        self.bind_all('<Control-y>', self.redo)
-        self.bind_all('<Key-F1>', self.open_help)
+        self.menu_edit.entryconfig(0, command=f_conv[0])
+        self.menu_edit.entryconfig(1, command=f_conv[1])
+        self.menu_edit.entryconfig(2, command=f_conv[2])
+        self.menu_edit.entryconfig(4, command=f_unre[0])
+        self.menu_edit.entryconfig(5, command=f_unre[1])
+
+        self.menu_help.entryconfig(0, command=gui.HelpWindow)
+        self.menu_help.entryconfig(1, command=lambda : webbrowser.open(URL))
+
+        for i in range(3):
+            self.button_converts[i].config(command=f_conv[i])
+        for i in range(2):
+            self.button_clears[i].config(command=f_clea[i])
+        for i in range(2):
+            self.button_exports[i].config(command=f_expo[i])
+
+        self.bind_all('<Control-o>', f_open)
+        self.bind_all('<Control-s>', f_save[0])
+        self.bind_all('<Control-S>', f_save[1])
+        self.bind_all('<Control-e>', f_expo[0])
+        self.bind_all('<Control-E>', f_expo[1])
+        self.bind_all('<Key-F5>', f_conv[0])
+        self.bind_all('<Key-F6>', f_conv[1])
+        self.bind_all('<Key-F7>', f_conv[2])
+        self.bind_all('<Control-z>', f_unre[0])
+        self.bind_all('<Control-Z>', f_unre[1])
+        self.bind_all('<Control-y>', f_unre[1])
+        self.bind_all('<Key-F1>', lambda event: gui.HelpWindow())
         self.bind_all('<Control-q>', lambda event: self.quit())
 
-        for i in range(1, 5):
-            self.bind_all(f'<Control-Key-{i}>', self.mode_select)
-
-        self.bind_all('<exclam>', lambda event: self.frame_ctrl.combo_symbol.current(0))
-        self.bind_all('<asterisk>', lambda event: self.frame_ctrl.combo_symbol.current(1))
+        for i in range(1, 3):
+            self.bind_all(f'<Control-Key-{i}>', self.make_callback(self.mode_select))
 
         return self
 
-# callback from here
-    def callback(func):
-        def f_decorated(self, event=None):
+# from here, callback funcs
+    def make_callback(self, func, *mode):
+        def f_callback(event=None):
             # try:
             if True:
-                return func(self, event=event)
+                func(event, *mode)
+                return 'break'
             else:
             # except Exception as e:
                 mb.showerror('エラーが発生しました', str(e))
-        return f_decorated
 
-    @callback
-    def open(self, event):
+        return f_callback
+
+    def open_file(self, event):
         ifile_path = fd.askopenfilename(filetypes=[('psd files', '*.psd')])
         if not ifile_path:
             return 'break'
@@ -101,96 +117,75 @@ class AppTop(gui.TkWithMenu):
             raise Exception('.psdファイルではありません')
         
         self.open_subfunc(ifile_path)
+        self.unre_state(0, 0).unre_state(1, 0)
+
+        self.show_filename(self.ifile_path)
+        self.show_msg('ファイルを開きました')
+
         return self
 
-    @callback
-    def save_same(self, event):
+    def save_file(self, event, mode):
+        # 0: 上書き, 1: 別名
         if not self.handler:
             mb.showwarning('ファイルがありません', 'まずはファイルを開いてください')
             return 'break'
 
-        self.save_subfunc(self.ifile_path)
-        self.frame_ctrl.label_msg.config(text='保存されました')
-        return self
+        if mode == 0:
+            ofile_path = self.ifile_path
+            msg = '上書き保存されました'
+        elif mode == 1:
+            ofile_path = fd.asksaveasfilename(filetypes=[('psd files', '*.psd')])
+            msg = '別名で保存されました'
 
-    @callback
-    def save_diff(self, event):
-        if not self.handler:
-            mb.showwarning('ファイルがありません', 'まずはファイルを開いてください')
-            return 'break'
-
-        ofile_path = fd.asksaveasfilename(filetypes=[('psd files', '*.psd')])
-
-        if not ofile_path:
-            return 'break'
-        if ofile_path[-4:] != '.psd':
-            ofile_path += '.psd'
+            if not ofile_path:
+                return 'break'
+            if ofile_path[-4:] != '.psd':
+                ofile_path += '.psd'
 
         self.save_subfunc(ofile_path)
 
-        self.ifile_path = ofile_path
-        self.frame_ctrl.label_msg.config(text='別名で保存されました')
-        self.frame_ctrl.label_filename.config(text=self.ifile_path)
-
+        self.show_filename(self.ifile_path)
+        self.show_msg(msg)
         return self
 
-    @callback
-    def export(self, event):
+    def export_script(self, event, mode):
         if not self.handler:
             mb.showwarning('ファイルがありません', 'まずはファイルを開いてください')
             return 'break'
 
-        efile_path = self.ifile_path[:-4] + '.anm'
-        if os.path.isfile(efile_path):
-            if not mb.askyesno('同名ファイルを確認', f'{efile_path}が既に存在しています\n上書きしますか？'):
-                self.frame_ctrl.label_msg.config(text='.anmファイルの出力をキャンセルしました')
-                return self
+        if mode == 0:
+            efile_path = self.ifile_path[:-4] + self.get_anmtail() + '.anm'
+        elif mode == 1:
+            efile_path = fd.asksaveasfilename(filetypes=[('anm files', '*.anm')])
+            if not efile_path:
+                return 'break'
+            if efile_path[-4:] != '.anm':
+                ofile_path += '.anm'
 
         self.export_subfunc(efile_path)
-        self.frame_ctrl.label_msg.config(text='.anmファイルを出力しました')
-        # webbrowser.open(self.ifile_path[:-4] + '.anm')
+        self.show_msg('.anmファイルを出力しました')
 
         return self
 
-    @callback
-    def undo(self, event):
-        if self.logger.is_empty(0):
+    def undoredo(self, event, mode):
+        # 0: undo, 1: redo
+        if self.logger.is_empty(mode):
             return 'break'
 
         self.cache_names()
+        self.logger.stack_at(self.dict_names, 1-mode)
 
-        self.logger.stack_at(self.dict_names, 1)
-        self.dict_names = self.logger.pop_from(0)
-
+        self.dict_names = self.logger.pop_from(mode)
         self.refresh_names()
         
-        self.unre_state(1, 1)  # enable redo button
+        self.unre_state(1-mode, 1)  # enable redo button
 
-        if self.logger.is_empty(0):
-            self.unre_state(0, 0)
+        if self.logger.is_empty(mode):
+            self.unre_state(mode, 0)
         return self
 
-    @callback
-    def redo(self, event):
-        if self.logger.is_empty(1):
-            return 'break'
-
-        self.cache_names()
-
-        self.logger.stack_at(self.dict_names, 0)
-        self.dict_names = self.logger.pop_from(1)
-
-        self.refresh_names()
-        
-        self.unre_state(0, 1)  # enable redo button
-
-        if self.logger.is_empty(1):
-            self.unre_state(1, 0)
-
-        return self
-
-    @callback
-    def convert(self, event):
+    def convert(self, event, mode):
+        # action 0: 「!」をつける, 1: 「*」をつける, 2: 消す
         if not self.handler:
             mb.showwarning('ファイルがありません', 'まずはファイルを開いてください')
             return 'break'
@@ -200,109 +195,122 @@ class AppTop(gui.TkWithMenu):
         self.logger.reset(1)
 
         for layer, depth in self.handler.layer_list():
-            if self.make_condition(layer, depth, self.frame_ctrl.get_select()):
-                self.convert_subfunc(layer, self.frame_ctrl.get_action())
+            if self.make_condition(layer, depth, self.selected_tab()):
+                self.convert_subfunc(layer, mode)
 
         self.unre_state(0, 1).unre_state(1, 0)
         return self
 
-    @callback
     def mode_select(self, event):
-        num = int(event.keysym)
-        if num < 3:
-            self.frame_ctrl.var_select.set(int(event.keysym) - 1)
-        else:
-            self.frame_ctrl.var_action.set(int(event.keysym) - 3)
+        index = int(event.keysym) - 1
+        self.select_tab(index)
         return self
 
-    @callback
-    def open_github(self, event):
-        webbrowser.open(URL)
+    def deal_anmlayer(self, event, mode, layer=None):
+        # 0: stack, 1: pop, 2: clear
+        if mode == 0:
+            self.stack_anmlayers(layer)
+        elif mode == 1:
+            self.pop_anmlayers()
+        elif mode == 2:
+            self.clear_anmlayers()
         return self
 
-    @callback
-    def open_help(self, event=None):
-        gui.HelpWindow()
-        return self
-# callback to here
+# to here, callback funcs
 
+# from here, funcs need for open
     def open_subfunc(self, ifile_path):
         self.ifile_path = ifile_path
         self.handler = handler.PSDHandler(self.ifile_path)
 
-        self.frame_ctrl.combo_depth.config(values=list(range(self.handler.depth_max+1)))
-        self.frame_ctrl.combo_depth.current(0)
+        self.remake_frame_show()
+
+        self.set_combo_depth(list(range(self.handler.depth_max+1)))
+
+        self.dict_names = {}
+        for layer, _ in self.handler.layer_list():
+            self.dict_names[id(layer)] = layer.name
 
         self.logger.reset(0).reset(1)
 
-        self.remake_hierarchy_frame()
-
-        self.frame_ctrl.label_msg.config(text='ファイルを開きました')
-        self.frame_ctrl.label_filename.config(text=self.ifile_path)
-
-        for i in range(3):
-            self.menu_file.entryconfig(i+1, state='normal')
+        for i in [1, 2, 4, 5]:
+            self.menu_file.entryconfig(i, state='normal')
+        for i in [0, 1, 2, 4, 5]:
             self.menu_edit.entryconfig(i, state='normal')
 
         return self
 
+    def remake_frame_show(self):
+        self.frame_show.destroy()
+        self.frame_show = gui.ShowFrame(self, self.handler)
+
+        self.frame_show.grid(row=0, column=2, padx=12, pady=12)
+        for layer, _ in self.handler.layer_list():
+            if layer.is_group():
+                button_tmp = self.frame_show.dict_widgets[id(layer)]['button']
+                button_tmp.config(command=self.make_callback(self.deal_anmlayer, 0, layer))
+
+        return self
+# to here, funcs need for open
+
     def save_subfunc(self, ofile_path):
         for layer, _ in self.handler.layer_list():
-            layer.name = self.dict_widgets[id(layer)]['entry'].get()
+            layer.name = self.frame_show.get_dict_widgets()[id(layer)]['entry'].get()
 
         self.handler.save(ofile_path)
+        self.ifile_path = ofile_path
         return self
 
-    def export_subfunc(self, ofile_path):
-        tracknum = 0
-        tracklines = ''
-        valuelines = ''
+    def export_subfunc(self, efile_path):
+        anmlayers = self.get_anmlayers()
 
-        for layer, _ in self.handler.layer_list():
-            if self.dict_widgets[id(layer)]['bool'].get() and layer.is_group():
-                trackline, valueline = self.handler.export_anmscript(layer, tracknum) 
-                tracklines += trackline
-                valuelines += valueline + '\n'
+        tracklines, valuelines = '', ''
+        for tracknum, layer in enumerate(anmlayers):
+            trackline, valueline = self.handler.export_anmscript(layer, tracknum)
+            tracklines += trackline
+            valuelines += '\n' + valueline
 
-                if tracknum == 3:
-                    break
-                else:
-                    tracknum += 1
-
-        with open(ofile_path, mode='w', encoding='cp932') as fout:
-            fout.write(tracklines + '\n')
+        with open(efile_path, mode='w', encoding='cp932') as fout:
+            fout.write(tracklines)
             fout.write(valuelines)
+
         return self
 
 # from here, funcs need for conversion
     def convert_subfunc(self, layer, mode):
-        target = self.dict_widgets[id(layer)]['entry']
-        target.config(state='normal')
-        if mode == 0:
-            if not (target.get()[0] in self.handler.EXCEPTLIST):
-                target.insert(0, self.frame_ctrl.combo_symbol.get())
-        elif mode == 1:
-            while target.get()[0:1] in self.handler.EXCEPTLIST:
-                target.delete(0, 1)
-        target.config(state='readonly')
+        entry_target = self.frame_show.get_dict_widgets()[id(layer)]['entry']
+        entry_target.config(state='normal')
+        symbols = self.handler.EXCEPTLIST  # ('!', '*')
+
+        if mode in [0, 1] and not (entry_target.get()[0] in symbols):
+            entry_target.insert(0, symbols[mode])
+        elif mode == 2:
+            while entry_target.get()[0:1] in symbols:
+                entry_target.delete(0, 1)
+        entry_target.config(state='readonly')
         return self
 
-
     def make_condition(self, layer, depth, mode):
+        # 0: チェックを入れたレイヤー, 1: 条件指定
+
         if mode == 0:
-            c_depth, c_words, c_match, c_class = self.frame_ctrl.get_condition()
+            return self.frame_show.get_dict_widgets()[id(layer)]['bool'].get()
+
+        elif mode == 1:
+            c_depth, c_words, c_match, c_class = self.get_condition()
             condition = True
 
-            select_target = layer._parent if c_class == 3 else layer
+            id_layer = id(layer._parent if c_class == 3 else layer)
+            entry_target = self.frame_show.get_dict_widgets()[id_layer]['entry']
             c_depth_target = c_depth + (1 if c_class == 3 else 0)
 
             if c_depth > 0:
                 condition = condition and (c_depth_target == depth)
 
             if c_match == 0:
-                condition = condition and (c_words in select_target.name)
+                condition = condition and (c_words in entry_target.get())
             elif c_match == 1:
-                condition = condition and (c_words == select_target.name)
+                condition = condition and (c_words == entry_target.get())
 
             if c_class == 1:
                 condition = condition and (not layer.is_group())
@@ -310,91 +318,25 @@ class AppTop(gui.TkWithMenu):
                 condition = condition and (layer.is_group())
 
             return condition
-
-        elif mode == 1:
-            return self.dict_widgets[id(layer)]['bool'].get()
+# to here, funcs need for conversion
 
     def cache_names(self):
         for layer, _ in self.handler.layer_list():
-            self.dict_names[id(layer)] = self.dict_widgets[id(layer)]['entry'].get()
+            self.dict_names[id(layer)] = self.frame_show.get_dict_widgets()[id(layer)]['entry'].get()
         return self
 
     def refresh_names(self):
         for layer, _ in self.handler.layer_list():
-            target = self.dict_widgets[id(layer)]['entry']
-            target.config(state='normal')
-            target.delete(0, 'end')
-            target.insert(0, self.dict_names[id(layer)])
-            target.config(state='readonly')
+            entry_target = self.frame_show.get_dict_widgets()[id(layer)]['entry']
+            entry_target.config(state='normal')
+            entry_target.delete(0, 'end')
+            entry_target.insert(0, self.dict_names[id(layer)])
+            entry_target.config(state='readonly')
         return self
-# to here, funcs need for conversion
-
-# from here, make hierarchy view
-    def remake_hierarchy_frame(self):
-        for frame in self.frame_show.remake_frame():
-            self.make_hierarchy_widgets(frame)
-        return self
-
-    def make_hierarchy_widgets(self, master):
-        self.dict_widgets = {}
-        self.dict_names = {}
-
-        frame_tmp = ttk.Frame(master)
-        ttk.Label(frame_tmp, text='層  ', anchor='w').grid(row=0, column=0)
-
-        bool_tmp = tk.BooleanVar()
-        bool_tmp.set(False)
-        self.dict_widgets[id(self.handler.psd)] = {'bool': bool_tmp}
-
-        check_tmp = tk.Checkbutton(frame_tmp, variable=bool_tmp)
-        check_tmp.grid(row=0, column=1)
-        check_tmp.bind('<Button-1>', self.make_func_clicked(self.handler.psd))
-
-        ttk.Label(frame_tmp, text='レイヤー名', anchor='w').grid(row=0, column=2)
-
-        frame_tmp.pack(anchor='w')
-
-        for layer, depth in self.handler.layer_list():
-            frame_tmp = ttk.Frame(master)
-
-            ttk.Label(frame_tmp, text=str(depth) + ' ' * 4 * depth + '|-').grid(row=0, column=0)
-
-            bool_tmp = tk.BooleanVar()
-            bool_tmp.set(False)
-
-            check_tmp = tk.Checkbutton(frame_tmp, variable=bool_tmp)
-            check_tmp.grid(row=0, column=1)
-            check_tmp.bind('<Button-1>', self.make_func_clicked(layer))
-
-            entry_tmp = tk.Entry(frame_tmp, width=12)
-            entry_tmp.insert(0, layer.name)
-            entry_tmp.config(state='readonly')
-            entry_tmp.grid(row=0, column=2)
-
-            self.dict_names[id(layer)] = layer.name
-            self.dict_widgets[id(layer)] = {'bool': bool_tmp, 'entry': entry_tmp}
-
-            frame_tmp.pack(anchor='w')
-        return self
-
-    def make_func_clicked(self, layer):
-        def func_clicked(event=None):
-            # event.state: click-8, shift click-9, ctrl shict click=13
-            bool_got = self.dict_widgets[id(layer)]['bool'].get()
-            if event.state == 9 and layer.is_group():
-                checkrange = layer
-            elif event.state == 13 and layer.is_group():
-                checkrange = [sublayer for sublayer, _ in self.handler.layer_list(layer)]
-            else:
-                checkrange = []
-            for sublayer in checkrange:
-                self.dict_widgets[id(sublayer)]['bool'].set(bool_got)
-        return func_clicked
 
 
 root = AppTop()
 ifile_path = './sample.psd'
 ifile_path = r'C:\Users\user\Pictures\sample.psd'
-root.bind_all('<asterisk>', lambda event: root.frame_ctrl.combo_symbol.current(1))
 # root.open_subfunc(ifile_path)
 root.mainloop()
