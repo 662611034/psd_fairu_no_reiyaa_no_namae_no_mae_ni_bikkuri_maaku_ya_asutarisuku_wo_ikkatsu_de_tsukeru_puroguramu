@@ -2,13 +2,17 @@ from psd_tools import PSDImage
 import tkinter as tk
 import tkinter.ttk as ttk
 
+class Hoge(PSDImage):
+    pass
+
 
 class PSDHandler():
     EXCEPTLIST = ('!', '*')
 
-    def __init__(self, ifile_path):
-        self.psd = PSDImage.open(ifile_path)
+    def __init__(self, ifile_path, encoding='sjis'):
+        self.psd = PSDImage.open(ifile_path, encoding=encoding)
         self.depth_max = self.find_depth_max()
+        self.encoding = encoding
 
     def find_depth_max(self):
         depth_max = 0
@@ -17,8 +21,8 @@ class PSDHandler():
                 depth_max = depth
         return depth_max
 
-    def save(self, ofile_path):
-        self.psd.save(ofile_path)
+    def save(self, ofile_path, encoding=None):
+        self.psd.save(ofile_path, encoding=encoding if encoding else self.encoding)
         return self
 
     def layer_list(self, layer=None, depth=1):
@@ -76,9 +80,6 @@ class PSDHandler():
 
 if __name__ == '__main__':
     ifile = r'./sample.psd'
-    ifile = r'C:\Users\user\Pictures\sample.psd'
+    # ifile = r'C:\Users\user\Pictures\sample.psd'
     handler = PSDHandler(ifile)
-    x = {handler.psd[0]: 1}
-    print(handler.psd[0].is_group())
-    for i in handler.psd[0]:
-        print(i)
+    print(dir(handler.psd))

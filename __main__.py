@@ -99,12 +99,12 @@ class AppTop(gui.RootWindow):
 # from here, callback funcs
     def make_callback(self, func, *mode):
         def f_callback(event=None):
-            # try:
-            if True:
+            try:
+            # if True:
                 func(event, *mode)
                 return 'break'
-            else:
-            # except Exception as e:
+            # else:
+            except Exception as e:
                 mb.showerror('エラーが発生しました', str(e))
 
         return f_callback
@@ -133,16 +133,17 @@ class AppTop(gui.RootWindow):
         if mode == 0:
             ofile_path = self.ifile_path
             msg = '上書き保存されました'
+            encoding = self.handler.encoding
         elif mode == 1:
             ofile_path = fd.asksaveasfilename(filetypes=[('psd files', '*.psd')])
-            msg = '別名で保存されました'
-
             if not ofile_path:
                 return 'break'
             if ofile_path[-4:] != '.psd':
                 ofile_path += '.psd'
+            msg = '別名で保存されました'
+            encoding = self.get_encode()
 
-        self.save_subfunc(ofile_path)
+        self.save_subfunc(ofile_path, encoding)
 
         self.show_filename(self.ifile_path)
         self.show_msg(msg)
@@ -160,7 +161,7 @@ class AppTop(gui.RootWindow):
             if not efile_path:
                 return 'break'
             if efile_path[-4:] != '.anm':
-                ofile_path += '.anm'
+                efile_path += '.anm'
 
         self.export_subfunc(efile_path)
         self.show_msg('.anmファイルを出力しました')
@@ -221,7 +222,7 @@ class AppTop(gui.RootWindow):
 # from here, funcs need for open
     def open_subfunc(self, ifile_path):
         self.ifile_path = ifile_path
-        self.handler = handler.PSDHandler(self.ifile_path)
+        self.handler = handler.PSDHandler(self.ifile_path, self.get_encode())
 
         self.remake_frame_show()
 
@@ -253,12 +254,13 @@ class AppTop(gui.RootWindow):
         return self
 # to here, funcs need for open
 
-    def save_subfunc(self, ofile_path):
+    def save_subfunc(self, ofile_path, encoding):
         for layer, _ in self.handler.layer_list():
             layer.name = self.frame_show.get_dict_widgets()[id(layer)]['entry'].get()
 
-        self.handler.save(ofile_path)
+        self.handler.save(ofile_path, encoding)
         self.ifile_path = ofile_path
+        self.handler.encoding = encoding
         return self
 
     def export_subfunc(self, efile_path):
@@ -270,7 +272,7 @@ class AppTop(gui.RootWindow):
             tracklines += trackline
             valuelines += '\n' + valueline
 
-        with open(efile_path, mode='w', encoding='cp932') as fout:
+        with open(efile_path, mode='w', encoding='sjis') as fout:  # or cp932
             fout.write(tracklines)
             fout.write(valuelines)
 

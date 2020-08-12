@@ -2,10 +2,13 @@ import tkinter as tk
 import tkinter.ttk as ttk
 
 
-ABOUTMSG='''
-.psdファイルのレイヤーの名前の前に「!」や「*」を一括でつけるプログラムです
+FILEMSG='''
+・ファイルを開くとき文字コードを指定することができます
 
-ついでに.anmファイルの書き出しもできます
+・上書き保存の場合は文字コード選択メニューの状況によらず
+　ファイルを開いた時の文字コードで保存されます
+
+・別名で保存の場合は選択メニューで指定されている文字コードで保存されます
 '''
 
 CONVMSG = '''
@@ -44,6 +47,9 @@ EXPORTMSG='''
 
 ・既定の名前で書き出す場合、.psdファイルと同じフォルダの
 　「(同じファイル名)(入力した末尾文字列).anm」に出力されます
+
+・既定の名前で書き出す場合、同名ファイルが存在したら上書きします
+　確認メッセージは表示されません
 '''
 
 HOTKEYS = '''
@@ -72,11 +78,16 @@ class FileFrame(ttk.Frame):
 
     def make_self(self):
         self.label_msg = tk.Label(self, text='')
-        self.label_filename = ttk.Label(self, text='作業中のファイルはありません')
+        self.label_filename = ttk.Label(self, text='作業中のファイルはありません', width=60)
+
+        encodes = ['sjis', 'cp932', 'euc_jp', 'macroman', 'utf_8', 'utf_16', 'utf_32']
+        self.combo_encode = ttk.Combobox(self, values=encodes, width=12, state='readonly')
+        self.combo_encode.current(0)
+        self.combo_encode.grid(row=0, column=0, padx=6, pady=6, sticky='w')
 
         ttk.Label(self, text='作業中のファイル:', anchor='w').grid(row=1, column=0, padx=6, pady=6)
-        self.label_msg.grid(row=0, column=0, columnspan=2, padx=12, pady=6)
-        self.label_filename.grid(row=1, column=1, padx=12, pady=6)
+        self.label_msg.grid(row=0, column=0, columnspan=2, padx=6, pady=6)
+        self.label_filename.grid(row=1, column=1, padx=6, pady=6)
 
         return self
 
@@ -87,6 +98,9 @@ class FileFrame(ttk.Frame):
     def show_filename(self, filename):
         self.label_filename.config(text=filename)
         return self
+
+    def get_encode(self):
+        return self.combo_encode.get()
 
 
 class CtrlFrame(ttk.Frame):
@@ -479,10 +493,17 @@ class HelpWindow(tk.Toplevel):
         super().__init__(master, *args)
         self.book = ttk.Notebook(self)
         self.book.pack(anchor='w')
+        self.make_tab_file()
         self.make_tab_convert()
         self.make_tab_check()
         self.make_tab_export()
         self.make_tab_hotkeys()
+
+    def make_tab_file(self):
+        frame_tmp = ttk.Frame(self.book)
+        ttk.Label(frame_tmp, text=FILEMSG, font=('', 10), anchor='w').pack(padx=6, pady=6)
+        self.book.add(frame_tmp, text='ファイル')
+        return self
 
     def make_tab_convert(self):
         frame_tmp = ttk.Frame(self.book)
@@ -542,6 +563,7 @@ class RootWindow(tk.Tk):
     def alias_obj(self):
         self.show_msg = self.frame_file.show_msg
         self.show_filename = self.frame_file.show_filename
+        self.get_encode = self.frame_file.get_encode
 
         self.selected_tab = self.frame_ctrl.selected_tab
         self.select_tab = self.frame_ctrl.select_tab
@@ -618,5 +640,4 @@ if __name__ == '__main__':
     # CtrlFrame(root).grid(row=1, column=0)
     # Anm_Frame(root).grid(row=2, column=0)
     # test()
-    HelpWindow()
     root.mainloop()
