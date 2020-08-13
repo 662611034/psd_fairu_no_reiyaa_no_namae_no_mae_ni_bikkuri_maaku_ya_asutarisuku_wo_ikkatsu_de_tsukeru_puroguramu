@@ -70,6 +70,8 @@ HOTKEYS = '''
 
 ・ctrl+e / crrl+shift+e：既定の名前で / 名前を指定して.anmファイルを出力
 
+・ctrl+(a / A)：全てのレイヤーにチェックを入れる / 外す
+
 ・ctrl+q：終了
 '''
 
@@ -264,6 +266,49 @@ class Anm_Frame(ttk.Frame):
         return self.entry_anmtail.get()
 
 
+class LayerFrame(ttk.Frame):
+
+    def __init__(self, master, layer, depth, **kwargs):
+        super().__init__(master, **kwargs)
+
+        frame_tmp = ttk.Frame(self)
+
+        labelname = (str(depth) + ' ' * 4 * depth + '|-') if depth else '層'
+        label_tmp = ttk.Label(frame_tmp, text=labelname)
+        label_tmp.grid(row=0, column=0)
+
+        selected_tmp = tk.BooleanVar()
+        selected_tmp.set(False)
+
+        check_tmp = tk.Checkbutton(frame_tmp, variable=selected_tmp)
+        check_tmp.grid(row=0, column=1)
+
+        entry_tmp = tk.Entry(frame_tmp, width=12)
+        if depth:
+            entry_tmp.insert(0, layer.name)
+            entry_tmp.config(state='readonly')
+            entry_tmp.grid(row=0, column=2)
+        else:
+            ttk.Label(frame_tmp, text='レイヤー構造').grid(row=0, column=2)
+
+        frame_tmp.pack(anchor='w')
+
+        self.dict = {'label': label_tmp, 'selected': selected_tmp, 'check': check_tmp, 'entry': entry_tmp}
+
+        if layer.is_group():
+            button_tmp = tk.Button(frame_tmp, text='追加', command=print)  ################need to make func
+            button_tmp.grid(row=0, column=3) if depth else None
+            self.dict['button'] = button_tmp
+
+            folded_tmp = tk.BooleanVar()
+            folded_tmp.set(False)
+            self.dict['folded'] = folded_tmp
+
+            subframe_tmp = ttk.Frame(self, relief='groove', padding=1)
+            subframe_tmp.pack(anchor='w')
+            self.dict['subframe'] = subframe_tmp
+
+
 class ShowFrame(ttk.Frame):
     def __init__(self, master, psd=None, width=240, height=720):
         super().__init__(master)
@@ -297,13 +342,8 @@ class ShowFrame(ttk.Frame):
         self.scroll_y.destroy()
 
         self.canvas = tk.Canvas(self, width=self.width, height=self.height)
-        self.frame_hierarchy = ttk.Frame(self.canvas)
 
-        yield self.frame_hierarchy
-
-        # self.frame_hierarchy = self.make_widgets_recursive(self.canvas, psd, 0)
-        # yield None
-
+        self.frame_hierarchy = self.make_widgets_recursive(self.canvas, psd, 0)
         self.set_canvas().make_scrolls()
 
     def make_scrolls(self):
@@ -317,7 +357,7 @@ class ShowFrame(ttk.Frame):
         self.scroll_x.grid(row=1, column=0, sticky='ew')
         self.scroll_y.grid(row=0, column=1, sticky='ns')
         return self
-#########################################################################################
+
     def make_widgets_recursive(self, master, layer=None, depth=0):
         if not layer:
             return ttk.Frame(master)
@@ -325,149 +365,14 @@ class ShowFrame(ttk.Frame):
         frame_tmp = LayerFrame(master, layer, depth)
         self.dict_widgets[id(layer)] = frame_tmp.dict
         frame_tmp.pack(anchor='w')
-        frame_tmp.dict['check'].bind('<Button-1>', self.make_fcheck(id(layer)))
 
         if layer.is_group():
-            frame_tmp.dict['label'].bind('<Button-1>', self.make_ffold(id(layer))) if depth else None
+            # frame_tmp.dict['check'].bind('<Button-1>', self.make_fcheck(layer))
+            # frame_tmp.dict['label'].bind('<Button-1>', self.make_ffold(layer)) if depth else None
             for sublayer in layer:
                 self.make_widgets_recursive(frame_tmp.dict['subframe'], sublayer, depth+1).pack(anchor='w')
 
         return frame_tmp
-
-    def make_ffold(self, id_layer):
-
-        def ffold(event=None):
-            dict_target = self.dict_widgets[id_layer]
-            flag = dict_target['folded'].get()
-            if flag:
-                dict_target['subframe'].pack()
-            else:
-                dict_target['subframe'].pack_forget()
-            dict_target['folded'].set(not flag)
-            return 'break'
-
-        return ffold
-
-    def make_fcheck(self, id_layer):
-
-        def fcheck(event=None):
-            pass
-
-        return fcheck
-
-#########################################################################################
-    def make_widgets(self, psd):
-        self.dict_widgets = {}
-        frame_tmp = ttk.Frame(self.frame_hierarchy)
-        ttk.Label(frame_tmp, text='層', anchor='w').grid(row=0, column=0, sticky='w')
-
-        bool_tmp = tk.BooleanVar()
-        bool_tmp.set(False)
-
-        check_tmp = tk.Checkbutton(frame_tmp, variable=bool_tmp)
-        check_tmp.grid(row=0, column=1)
-        check_tmp.bind('<Button-1>', self.make_fclicked(psd, psd))
-
-        ttk.Label(frame_tmp, text='レイヤー名', anchor='w').grid(row=0, column=2, sticky='w')
-        self.dict_widgets[id(psd)] = {'bool': bool_tmp}
-
-        frame_tmp.pack(anchor='w')
-        for layer, depth in psd.all_layers():
-
-            frame_tmp = ttk.Frame(self.frame_hierarchy)
-
-            ttk.Label(frame_tmp, text=str(depth) + ' ' * 4 * depth + '|-').grid(row=0, column=0)
-
-            bool_tmp = tk.BooleanVar()
-            bool_tmp.set(False)
-
-            check_tmp = tk.Checkbutton(frame_tmp, variable=bool_tmp)
-            check_tmp.grid(row=0, column=1)
-            check_tmp.bind('<Button-1>', self.make_fclicked(layer, psd))
-
-            entry_tmp = tk.Entry(frame_tmp, width=12)
-            entry_tmp.insert(0, layer.name)
-            entry_tmp.config(state='readonly')
-            entry_tmp.grid(row=0, column=2)
-
-            self.dict_widgets[id(layer)] = {'bool': bool_tmp, 'entry': entry_tmp}
-
-            if layer.is_group():
-                button_tmp = tk.Button(frame_tmp, text='追加')
-                button_tmp.grid(row=0, column=3)
-                self.dict_widgets[id(layer)]['button'] = button_tmp
-
-            frame_tmp.pack(anchor='w')
-        return self
-
-    def make_fclicked(self, layer, psd):
-
-        id_tmp = id(layer)
-
-        # event.state: click-8, shift click-9, ctrl shict click=13
-        if layer.is_group():
-            dict_range = {8: [], \
-                    9: [id(sublayer) for sublayer in layer], \
-                    13: [id(sublayer) for sublayer, _ in psd.sublayers_recursive(layer)]}
-        else:
-            dict_range = {8: [], 9: [], 13: []}
-
-        def clicked(event=None):
-            bool_got = self.dict_widgets[id_tmp]['bool'].get()
-            for id_layer in dict_range[event.state]:
-                self.dict_widgets[id_layer]['bool'].set(bool_got)
-
-        return clicked
-
-    def get_dict_widgets(self):
-        return self.dict_widgets
-
-
-class LayerFrame(ttk.Frame):
-
-    dict_widgets = {}
-    
-    def __init__(self, master, layer, depth, **kwargs):
-        super().__init__(master, **kwargs)
-
-        frame_tmp = ttk.Frame(self)
-
-        labelname = (str(depth) + ' ' * 4 * depth + '|-') if depth else '層'
-        label_tmp = ttk.Label(frame_tmp, text=labelname)
-        label_tmp.grid(row=0, column=0)
-        # label_tmp.bind('<Button-1>', self.make_ffold(layer, psd))  #################need to make func
-
-        selected_tmp = tk.BooleanVar()
-        selected_tmp.set(False)
-
-        check_tmp = tk.Checkbutton(frame_tmp, variable=selected_tmp)
-        check_tmp.grid(row=0, column=1)
-        # check_tmp.bind('<Button-1>', self.make_fclicked_dev(layer, psd))  #################need to make func
-
-        entry_tmp = tk.Entry(frame_tmp, width=12)
-        if depth:
-            entry_tmp.insert(0, layer.name)
-            entry_tmp.config(state='readonly')
-            entry_tmp.grid(row=0, column=2)
-        else:
-            ttk.Label(frame_tmp, text='レイヤー構造').grid(row=0, column=2)
-
-        frame_tmp.pack(anchor='w')
-
-        self.dict = {'label': label_tmp, 'selected': selected_tmp, 'check': check_tmp, 'entry': entry_tmp}
-
-        if layer.is_group():
-            button_tmp = tk.Button(frame_tmp, text='追加', command=print)  ################need to make func
-            button_tmp.grid(row=0, column=3) if depth else None
-            self.dict['button'] = button_tmp
-
-            folded_tmp = tk.BooleanVar()
-            folded_tmp.set(False)
-            self.dict['folded'] = folded_tmp
-
-            subframe_tmp = ttk.Frame(self, relief='groove', padding=1)
-            subframe_tmp.pack(anchor='w')
-            self.dict['subframe'] = subframe_tmp
 
 
 class HelpWindow(tk.Toplevel):

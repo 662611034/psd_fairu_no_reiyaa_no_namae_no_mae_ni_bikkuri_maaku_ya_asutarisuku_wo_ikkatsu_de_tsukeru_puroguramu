@@ -1,4 +1,4 @@
-import traceback
+# import traceback
 import webbrowser
 import os
 import copy
@@ -53,7 +53,9 @@ class AppTop(gui.RootWindow):
         f_conv = [self.make_callback(self.convert, i) for i in range(3)]
         f_unre = [self.make_callback(self.undoredo, i) for i in range(2)]
 
-        f_clea = [self.make_callback(self.deal_anmlayer, i+1) for i in range(2)]
+        f_clea = [self.make_callback(self.deal_anmlayer, i+1) for i in range(2)]  # clear 1 or all
+
+        f_sela = [self.make_callback(self.select_all, i) for i in range(2)]  # select all
 
         self.menu_file.entryconfig(0, command=f_open)
         self.menu_file.entryconfig(1, command=f_save[0])
@@ -89,6 +91,8 @@ class AppTop(gui.RootWindow):
         self.bind_all('<Control-z>', f_unre[0])
         self.bind_all('<Control-Z>', f_unre[1])
         self.bind_all('<Control-y>', f_unre[1])
+        self.bind_all('<Control-a>', f_sela[1])
+        self.bind_all('<Control-A>', f_sela[0])
         self.bind_all('<Key-F1>', lambda event: gui.HelpWindow())
         self.bind_all('<Control-q>', lambda event: self.quit())
 
@@ -104,8 +108,8 @@ class AppTop(gui.RootWindow):
                 func(event, *mode)
                 return 'break'
             except Exception as e:
-                # mb.showerror('エラーが発生しました', str(e))
-                mb.showerror('エラーが発生しました', str(traceback.format_exc()))
+                mb.showerror('エラーが発生しました', str(e))
+                # mb.showerror('エラーが発生しました', str(traceback.format_exc()))
 
         return f_callback
 
@@ -217,6 +221,15 @@ class AppTop(gui.RootWindow):
             self.clear_anmlayers()
         return self
 
+    def select_all(self, event, mode):
+        if not self.psd:
+            mb.showwarning('ファイルがありません', 'まずはファイルを開いてください')
+            return 'break'
+
+        for layer, _ in self.psd.all_layers():
+            self.frame_show.dict_widgets[id(layer)]['selected'].set(bool(mode))
+        return self
+
 # to here, callback funcs
 
 # from here, funcs need for open
@@ -242,21 +255,60 @@ class AppTop(gui.RootWindow):
         return self
 
     def remake_frame_show(self):
-        for frame in self.frame_show.remake_canvas(self.psd):
-            self.frame_show.make_widgets(self.psd)
-            # pass
+        self.frame_show.remake_canvas(self.psd)
+
+        self.frame_show.dict_widgets[id(self.psd)]['check'].bind('<Button-1>', self.make_fcheck(self.psd))
 
         for layer, _ in self.psd.all_layers():
             if layer.is_group():
-                button_tmp = self.frame_show.dict_widgets[id(layer)]['button']
-                button_tmp.config(command=self.make_callback(self.deal_anmlayer, 0, layer))
+                dict_tmp = self.frame_show.dict_widgets[id(layer)]
+                dict_tmp['button'].config(command=self.make_callback(self.deal_anmlayer, 0, layer))
+                dict_tmp['label'].bind('<Button-1>', self.make_ffold(layer))
+                dict_tmp['check'].bind('<Button-1>', self.make_fcheck(layer))
 
         return self
+
+    # make functions to bind at widgets on frame_show
+    def make_ffold(self, layer):
+
+        def ffold(event=None):
+            try:
+                dict_target = self.frame_show.dict_widgets[id(layer)]
+                flag = dict_target['folded'].get()
+                if flag:
+                    dict_target['subframe'].pack()
+                else:
+                    dict_target['subframe'].pack_forget()
+                dict_target['folded'].set(not flag)
+                return 'break'
+
+            except Exception as e:
+                mb.showerror('エラーが発生しました', str(e))
+
+        return ffold
+
+    def make_fcheck(self, layer):
+        # event.state: click-8, shift click-9, ctrl shict click=13
+        dict_range = {8: [], \
+                9: [id(sublayer) for sublayer in layer], \
+                13 : [id(sublayer) for sublayer, _ in self.psd.sublayers_recursive(layer)]}
+        id_tmp = id(layer)
+
+        def fcheck(event=None):
+            try:
+                bool_got = self.frame_show.dict_widgets[id_tmp]['selected'].get()
+                for id_layer in dict_range[event.state]:
+                    self.frame_show.dict_widgets[id_layer]['selected'].set(bool_got)
+
+            except Exception as e:
+                mb.showerror('エラーが発生しました', str(e))
+
+        return fcheck
 # to here, funcs need for open
 
     def save_subfunc(self, ofile_path, encoding):
         for layer, _ in self.psd.all_layers():
-            layer.name = self.frame_show.get_dict_widgets()[id(layer)]['entry'].get()
+            layer.name = self.frame_show.dict_widgets[id(layer)]['entry'].get()
 
         self.psd.save(ofile_path, encoding)
         self.ifile_path = ofile_path
@@ -280,7 +332,7 @@ class AppTop(gui.RootWindow):
 
 # from here, funcs need for conversion
     def convert_subfunc(self, layer, mode):
-        entry_target = self.frame_show.get_dict_widgets()[id(layer)]['entry']
+        entry_target = self.frame_show.dict_widgets[id(layer)]['entry']
         entry_target.config(state='normal')
         symbols = self.psd.HEADSYMBOLS  # ('!', '*')
 
@@ -296,14 +348,14 @@ class AppTop(gui.RootWindow):
         # 0: チェックを入れたレイヤー, 1: 条件指定
 
         if mode == 0:
-            return self.frame_show.get_dict_widgets()[id(layer)]['selected'].get()
+            return self.frame_show.dict_widgets[id(layer)]['selected'].get()
 
         elif mode == 1:
             c_depth, c_words, c_match, c_class = self.get_condition()
             condition = True
 
             id_layer = id(layer._parent if c_class == 3 else layer)
-            entry_target = self.frame_show.get_dict_widgets()[id_layer]['entry']
+            entry_target = self.frame_show.dict_widgets[id_layer]['entry']
             c_depth_target = c_depth + (1 if c_class == 3 else 0)
 
             if c_depth > 0:
@@ -324,12 +376,12 @@ class AppTop(gui.RootWindow):
 
     def cache_names(self):
         for layer, _ in self.psd.all_layers():
-            self.dict_names[id(layer)] = self.frame_show.get_dict_widgets()[id(layer)]['entry'].get()
+            self.dict_names[id(layer)] = self.frame_show.dict_widgets[id(layer)]['entry'].get()
         return self
 
     def refresh_names(self):
         for layer, _ in self.psd.all_layers():
-            entry_target = self.frame_show.get_dict_widgets()[id(layer)]['entry']
+            entry_target = self.frame_show.dict_widgets[id(layer)]['entry']
             entry_target.config(state='normal')
             entry_target.delete(0, 'end')
             entry_target.insert(0, self.dict_names[id(layer)])
@@ -338,7 +390,7 @@ class AppTop(gui.RootWindow):
 
 
 root = AppTop()
-# ifile_path = './sample.psd'
-ifile_path = r'C:\Users\user\Pictures\sample.psd'
-root.open_subfunc(ifile_path)
+ifile_path = './sample.psd'
+# ifile_path = r'C:\Users\user\Pictures\sample.psd'
+# root.open_subfunc(ifile_path)
 root.mainloop()

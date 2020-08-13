@@ -75,8 +75,5 @@ class PSDImageExt(psd_tools.PSDImage):
 if __name__ == '__main__':
     ifile = r'./sample.psd'
     psd0 = PSDImageExt.open(ifile, encoding='sjis')
-    ifile = r'C:\Users\user\Pictures\sample.psd'
-    psd1 = PSDImageExt.open(ifile, encoding='sjis')
-    print(psd1[1].is_group())
-    for l, d in psd0.sublayers_recursive(psd1[1]):
-        print(l)
+    print(psd0[0][0][0].is_group())
+    print([l for l, d in psd0.sublayers_recursive(psd0[0][0][0])])
