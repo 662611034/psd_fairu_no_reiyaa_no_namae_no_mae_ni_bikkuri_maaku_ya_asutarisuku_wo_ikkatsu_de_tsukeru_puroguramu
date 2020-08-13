@@ -35,6 +35,9 @@ CHECKMSG='''
 
 ・shift(+ctrl)+クリックは下位のレイヤーをチェック状況を反転するものではありません
 　強制に親レイヤーと逆の状態にするものです
+
+・Rootのチェックボックスは他のチェックボックスを操作するための物です
+　選択していても変換対象にはなりません
 '''
 
 EXPORTMSG='''
@@ -72,8 +75,8 @@ HOTKEYS = '''
 
 
 class FileFrame(ttk.Frame):
-    def __init__(self, master=None, *args):
-        super().__init__(master, *args)
+    def __init__(self, master=None, **kwargs):
+        super().__init__(master, **kwargs)
         self.make_self()
 
     def make_self(self):
@@ -104,8 +107,8 @@ class FileFrame(ttk.Frame):
 
 
 class CtrlFrame(ttk.Frame):
-    def __init__(self, master=None, *args):
-        super().__init__(master, *args)
+    def __init__(self, master=None, **kwargs):
+        super().__init__(master, **kwargs)
         ttk.Label(self, text='変換対象選択条件', font=('', 11), anchor='w').pack(anchor='w', pady=12)
         self.book = ttk.Notebook(self)
         self.book.pack(anchor='w', pady=12)
@@ -177,127 +180,6 @@ class CtrlFrame(ttk.Frame):
         self.book.select(index)
         return self
 
-    # def make_frame_select(self):
-    #     frame_tmp = ttk.Frame(self)
-    #     ttk.Label(frame_tmp, text='・レイヤー選択条件').pack(anchor='w', padx=12)
-
-    #     self.var_select = tk.IntVar()
-    #     self.var_select.set(0)
-
-    #     subframe_tmp = []
-    #     self.radio_mode = []
-
-    #     for i in range(2):
-    #         subframe_tmp.append(ttk.Frame(frame_tmp))
-    #         subframe_tmp[i].pack(anchor='w')
-    #         self.radio_mode.append(\
-    #                 ttk.Radiobutton(subframe_tmp[i], text='', value=i, variable=self.var_select))
-    #         self.radio_mode[i].grid(row=0, column=0, padx=6, pady=6)
-
-    #     # subframe[0]
-    #     column = 1
-    #     self.combo_depth = ttk.Combobox(subframe_tmp[0], state='readonly', width=18)
-    #     self.combo_depth.grid(row=0, column=column, pady=5)
-    #     self.combo_depth.bind('<Button-1>', lambda x : self.var_select.set(0))
-
-    #     column += 1
-    #     label_tmp = ttk.Label(subframe_tmp[0], text='層にある、')
-    #     label_tmp.bind('<Button-1>', lambda x : self.var_select.set(0))
-    #     label_tmp.grid(row=0, column=column, pady=5)
-
-    #     column += 1
-    #     self.entry_word = tk.Entry(subframe_tmp[0], width=12)
-    #     self.entry_word.grid(row=0, column=column, pady=5)
-    #     self.entry_word.bind('<Button-1>', lambda x : self.var_select.set(0))
-
-    #     column += 1
-    #     self.combo_match = ttk.Combobox(subframe_tmp[0], values=['を含む', 'と一致する'], state='readonly', width=10)
-    #     self.combo_match.grid(row=0, column=column, pady=5)
-    #     self.combo_match.bind('<Button-1>', lambda x : self.var_select.set(0))
-
-    #     column += 1
-    #     label_tmp = ttk.Label(subframe_tmp[0], text='名前の')
-    #     label_tmp.bind('<Button-1>', lambda x : self.var_select.set(0))
-    #     label_tmp.grid(row=0, column=column, pady=5)
-    #     
-    #     column = 1
-    #     self.combo_class = ttk.Combobox(\
-    #             subframe_tmp[0], values=['物', 'レイヤー', 'グループ', 'グループの直下の物'], state='readonly', width=18)
-    #     self.combo_class.grid(row=1, column=column, pady=5)
-    #     self.combo_class.bind('<Button-1>', lambda x : self.var_select.set(0))
-    #     column += 1
-
-    #     label_tmp = ttk.Label(subframe_tmp[0], text='全て')
-    #     label_tmp.bind('<Button-1>', lambda x : self.var_select.set(0))
-    #     label_tmp.grid(row=1, column=column, pady=5)
-
-    #     # subframe[1]
-    #     label_tmp = ttk.Label(subframe_tmp[1], text='チェックが入っているレイヤー全て')
-    #     label_tmp.bind('<Button-1>', lambda x : self.var_select.set(1))
-    #     label_tmp.grid(row=0, column=1, pady=5)
-
-    #     self.combo_match.current(0)
-    #     self.combo_class.current(0)
-    #     frame_tmp.pack(pady=6)
-    #     return self
-
-    # def make_frame_action(self):
-    #     frame_tmp = ttk.Frame(self)
-    #     ttk.Label(frame_tmp, text='・実行内容').pack(anchor='w', padx=12)
-
-    #     self.var_action = tk.IntVar()
-    #     self.var_action.set(0)
-
-    #     self.subframe_action = []
-    #     self.radio_mode = []
-
-    #     for i in range(2):
-    #         self.subframe_action.append(ttk.Frame(frame_tmp))
-    #         self.subframe_action[i].pack(anchor='w')
-    #         self.radio_mode.append(\
-    #                 ttk.Radiobutton(self.subframe_action[i], text='', value=i, variable=self.var_action))
-    #         self.radio_mode[i].grid(row=0, column=0, padx=6, pady=6)
-
-    #     # subframe[0]
-    #     label_tmp = ttk.Label(self.subframe_action[0], text='に')
-    #     label_tmp.bind('<Button-1>', lambda x : self.var_action.set(0))
-    #     label_tmp.grid(row=0, column=1, pady=5)
-    #     self.combo_symbol = ttk.Combobox(self.subframe_action[0], values=['!', '*'], state='readonly', width=4)
-    #     self.combo_symbol.bind('<Button-1>', lambda x: self.var_action.set(0))
-    #     self.combo_symbol.grid(row=0, column=2, padx=6, pady=6)
-    #     label_tmp = ttk.Label(self.subframe_action[0], text='をつける')
-    #     label_tmp.bind('<Button-1>', lambda x : self.var_action.set(0))
-    #     label_tmp.grid(row=0, column=3, pady=5)
-    #     
-    #     self.combo_symbol.current(0)
-
-    #     # subframe[1]
-    #     label_tmp = ttk.Label(self.subframe_action[1], text='から「!」と「*」を消す')
-    #     label_tmp.bind('<Button-1>', lambda x : self.var_action.set(1))
-    #     label_tmp.grid(row=0, column=1, pady=5)
-
-    #     frame_tmp.pack(pady=6, anchor='w')
-    #     return self
-
-    # def make_frame_button(self):
-    #     frame_tmp = ttk.Frame(self)
-
-    #     self.button_convert = tk.Button(frame_tmp, text='変換', width=24)
-    #     self.button_convert.grid(row=0, column=0, padx=16, pady=5)
-    #     self.button_export = tk.Button(frame_tmp, text='.anmファイル出力', width=24)
-    #     self.button_export.grid(row=0, column=1, padx=16, pady=5)
-
-    #     frame_tmp.pack(pady=6)
-    #     return self
-
-    # def get_select(self):
-    #     # return 0 or 1 in int
-    #     return self.var_select.get()
-
-    # def get_action(self):
-    #     # return 0 or 1 in int
-    #     return self.var_action.get()
-
     def get_condition(self):
         c_depth = self.combo_depth.current()
         c_words = self.entry_word.get()
@@ -310,13 +192,10 @@ class CtrlFrame(ttk.Frame):
         self.combo_depth.current(0)
         return self
 
-    # def get_symbol(self):
-    #     return self.combo_symbol.get()
-
 
 class Anm_Frame(ttk.Frame):
-    def __init__(self, master, *args):
-        super().__init__(master, *args)
+    def __init__(self, master, **kwargs):
+        super().__init__(master, **kwargs)
         self.make_self()
         self.anmlayers = []
 
@@ -389,6 +268,8 @@ class ShowFrame(ttk.Frame):
     def __init__(self, master, psd=None, width=240, height=720):
         super().__init__(master)
         self.dict_widgets = {}
+        self.width = width
+        self.height = height
 
         self.canvas = tk.Canvas(self, width=width, height=height)
         self.frame_hierarchy = ttk.Frame(self.canvas)
@@ -409,6 +290,19 @@ class ShowFrame(ttk.Frame):
         self.canvas.grid(row=0, column=0)
         return self
 
+    def remake_canvas(self, psd):
+        self.frame_hierarchy.destroy()
+        self.canvas.destroy()
+        self.scroll_x.destroy()
+        self.scroll_y.destroy()
+
+        self.canvas = tk.Canvas(self, width=self.width, height=self.height)
+        self.frame_hierarchy = ttk.Frame(self.canvas)
+
+        yield self.frame_hierarchy
+
+        self.set_canvas().make_scrolls()
+
     def make_scrolls(self):
         self.scroll_x = tk.Scrollbar(self, orient='horizontal', command=self.canvas.xview)
         self.scroll_y = tk.Scrollbar(self, orient='vertical', command=self.canvas.yview)
@@ -422,6 +316,7 @@ class ShowFrame(ttk.Frame):
         return self
 
     def make_widgets(self, psd):
+        self.dict_widgets = {}
         frame_tmp = ttk.Frame(self.frame_hierarchy)
         ttk.Label(frame_tmp, text='層', anchor='w').grid(row=0, column=0, sticky='w')
 
@@ -487,10 +382,59 @@ class ShowFrame(ttk.Frame):
         return self.dict_widgets
 
 
+class LayerFrame(ttk.Frame):
+    
+    def __init__(self, master=None, layer, depth **kwargs):
+        super().__init__(master, **kwargs)
+        self.name = layer.name
+        self.depth = depth
+        self.is_group = layer.is_group()
+        self.master = master
+        self.dict = {}
+
+    def make_widgets(self):
+        frame_tmp = ttk.Frame(self)
+
+        labelname = (str(depth) + ' ' * 4 * self.depth + '|-') if self.depth else '層'
+        label_tmp = ttk.Label(frame_tmp, text=labelname)
+        label_tmp.grid(row=0, column=0)
+        label_tmp.bind('<Button-1>', self.make_ffold(layer, psd))  #################need to make func
+
+        bool_tmp = tk.BooleanVar()
+        bool_tmp.set(False)
+
+        check_tmp = tk.Checkbutton(frame_tmp, variable=bool_tmp)
+        check_tmp.grid(row=0, column=1)
+        check_tmp.bind('<Button-1>', self.make_fclicked_dev(layer, psd))  #################need to make func
+
+        if depth:
+            entry_tmp = tk.Entry(frame_tmp, width=12)
+            entry_tmp.insert(0, self.name)
+            entry_tmp.config(state='readonly')
+            entry_tmp.grid(row=0, column=2)
+        else:
+            ttk.Label(frame_tmp, text='レイヤー構造').grid(row=0, column=2)
+
+        if self.depth:
+            self.dict = {'bool': bool_tmp, 'entry': entry_tmp}
+        else:
+            self.dict = {'bool': bool_tmp}
+
+        if self.is_group and depth:
+            button_tmp = tk.Button(frame_tmp, text='追加')
+            button_tmp.grid(row=0, column=3)
+            self.dict['button'] = button_tmp
+
+            self.subframe_tmp = ttk.Frame(self)
+            self.subframe_tmp.pack()
+
+        frame_tmp.pack(anchor='w')
+        return self
+
 class HelpWindow(tk.Toplevel):
 
-    def __init__(self, master=None, *args):
-        super().__init__(master, *args)
+    def __init__(self, master=None, **kwargs):
+        super().__init__(master, **kwargs)
         self.book = ttk.Notebook(self)
         self.book.pack(anchor='w')
         self.make_tab_file()
@@ -532,8 +476,8 @@ class HelpWindow(tk.Toplevel):
 
 class RootWindow(tk.Tk):
 
-    def __init__(self, *args):
-        super().__init__(*args)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.make_menu()
         self.make_widgets()
         self.alias_obj()

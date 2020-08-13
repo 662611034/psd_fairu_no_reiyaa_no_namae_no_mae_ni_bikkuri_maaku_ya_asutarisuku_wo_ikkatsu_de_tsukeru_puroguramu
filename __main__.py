@@ -1,4 +1,4 @@
-# import traceback
+import traceback
 import webbrowser
 import os
 import copy
@@ -104,8 +104,8 @@ class AppTop(gui.RootWindow):
                 func(event, *mode)
                 return 'break'
             except Exception as e:
-                mb.showerror('エラーが発生しました', str(e))
-                # mb.showerror('エラーが発生しました', str(traceback.format_exc()))
+                # mb.showerror('エラーが発生しました', str(e))
+                mb.showerror('エラーが発生しました', str(traceback.format_exc()))
 
         return f_callback
 
@@ -242,8 +242,8 @@ class AppTop(gui.RootWindow):
         return self
 
     def remake_frame_show(self):
-        self.frame_show.destroy()
-        self.frame_show = gui.ShowFrame(self, self.psd)
+        for frame in self.frame_show.remake_canvas(self.psd):
+            self.frame_show.make_widgets(self.psd)
 
         self.frame_show.grid(row=0, column=2, padx=12, pady=12)
         for layer, _ in self.psd.all_layers():
@@ -252,6 +252,48 @@ class AppTop(gui.RootWindow):
                 button_tmp.config(command=self.make_callback(self.deal_anmlayer, 0, layer))
 
         return self
+
+################################################
+    def make_widgets_recursive(self, layer, depth, metaframe):
+        frame_tmp = ttk.Frame(metaframe)
+
+        labelname = (str(depth) + ' ' * 4 * depth + '|-') if depth else '層'
+        label_tmp = ttk.Label(frame_tmp, text=labelname)
+        label_tmp.grid(row=0, column=0)
+        label_tmp.bind('<Button-1>', self.make_ffold(layer, psd))  #################need to make func
+
+        bool_tmp = tk.BooleanVar()
+        bool_tmp.set(False)
+
+        check_tmp = tk.Checkbutton(frame_tmp, variable=bool_tmp)
+        check_tmp.grid(row=0, column=1)
+        check_tmp.bind('<Button-1>', self.make_fclicked_dev(layer, psd))  #################need to make func
+
+        if depth:
+            entry_tmp = tk.Entry(frame_tmp, width=12)
+            entry_tmp.insert(0, layer.name)
+            entry_tmp.config(state='readonly')
+            entry_tmp.grid(row=0, column=2)
+        else:
+            ttk.Label(frame_tmp, text='レイヤー構造').grid(row=0, column=2)
+
+        self.dict_widgets[id(layer)] = {'bool': bool_tmp, 'entry': entry_tmp}
+
+        if layer.is_group() and depth:
+            button_tmp = tk.Button(frame_tmp, text='追加')
+            button_tmp.grid(row=0, column=3)
+            self.dict_widgets[id(layer)]['button'] = button_tmp
+
+        frame_tmp.pack(anchor='w')
+
+        if layer.is_group:
+            subframe_tmp = ttk.Frame(metaframe)
+            subframe_tmp.pack()
+            for sublayer in layer:
+                self.make_widgets_recursive(sublayer, depth+1, subframe)
+        return self
+######################################################
+
 # to here, funcs need for open
 
     def save_subfunc(self, ofile_path, encoding):
@@ -339,6 +381,6 @@ class AppTop(gui.RootWindow):
 
 root = AppTop()
 # ifile_path = './sample.psd'
-# ifile_path = r'C:\Users\user\Pictures\sample.psd'
-# root.open_subfunc(ifile_path)
+ifile_path = r'C:\Users\user\Pictures\sample.psd'
+root.open_subfunc(ifile_path)
 root.mainloop()

@@ -77,4 +77,6 @@ if __name__ == '__main__':
     psd0 = PSDImageExt.open(ifile, encoding='sjis')
     ifile = r'C:\Users\user\Pictures\sample.psd'
     psd1 = PSDImageExt.open(ifile, encoding='sjis')
-    print(type(psd0.HEADSYBMOLS))
+    print(psd1[1].is_group())
+    for l, d in psd0.sublayers_recursive(psd1[1]):
+        print(l)
