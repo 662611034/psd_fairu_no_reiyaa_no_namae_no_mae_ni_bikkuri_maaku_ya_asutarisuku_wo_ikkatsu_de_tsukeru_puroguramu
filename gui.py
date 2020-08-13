@@ -301,6 +301,9 @@ class ShowFrame(ttk.Frame):
 
         yield self.frame_hierarchy
 
+        # self.frame_hierarchy = self.make_widgets_recursive(self.canvas, psd, 0)
+        # yield None
+
         self.set_canvas().make_scrolls()
 
     def make_scrolls(self):
@@ -314,7 +317,45 @@ class ShowFrame(ttk.Frame):
         self.scroll_x.grid(row=1, column=0, sticky='ew')
         self.scroll_y.grid(row=0, column=1, sticky='ns')
         return self
+#########################################################################################
+    def make_widgets_recursive(self, master, layer=None, depth=0):
+        if not layer:
+            return ttk.Frame(master)
+        
+        frame_tmp = LayerFrame(master, layer, depth)
+        self.dict_widgets[id(layer)] = frame_tmp.dict
+        frame_tmp.pack(anchor='w')
+        frame_tmp.dict['check'].bind('<Button-1>', self.make_fcheck(id(layer)))
 
+        if layer.is_group():
+            frame_tmp.dict['label'].bind('<Button-1>', self.make_ffold(id(layer))) if depth else None
+            for sublayer in layer:
+                self.make_widgets_recursive(frame_tmp.dict['subframe'], sublayer, depth+1).pack(anchor='w')
+
+        return frame_tmp
+
+    def make_ffold(self, id_layer):
+
+        def ffold(event=None):
+            dict_target = self.dict_widgets[id_layer]
+            flag = dict_target['folded'].get()
+            if flag:
+                dict_target['subframe'].pack()
+            else:
+                dict_target['subframe'].pack_forget()
+            dict_target['folded'].set(not flag)
+            return 'break'
+
+        return ffold
+
+    def make_fcheck(self, id_layer):
+
+        def fcheck(event=None):
+            pass
+
+        return fcheck
+
+#########################################################################################
     def make_widgets(self, psd):
         self.dict_widgets = {}
         frame_tmp = ttk.Frame(self.frame_hierarchy)
@@ -383,53 +424,51 @@ class ShowFrame(ttk.Frame):
 
 
 class LayerFrame(ttk.Frame):
-    
-    def __init__(self, master=None, layer, depth **kwargs):
-        super().__init__(master, **kwargs)
-        self.name = layer.name
-        self.depth = depth
-        self.is_group = layer.is_group()
-        self.master = master
-        self.dict = {}
 
-    def make_widgets(self):
+    dict_widgets = {}
+    
+    def __init__(self, master, layer, depth, **kwargs):
+        super().__init__(master, **kwargs)
+
         frame_tmp = ttk.Frame(self)
 
-        labelname = (str(depth) + ' ' * 4 * self.depth + '|-') if self.depth else '層'
+        labelname = (str(depth) + ' ' * 4 * depth + '|-') if depth else '層'
         label_tmp = ttk.Label(frame_tmp, text=labelname)
         label_tmp.grid(row=0, column=0)
-        label_tmp.bind('<Button-1>', self.make_ffold(layer, psd))  #################need to make func
+        # label_tmp.bind('<Button-1>', self.make_ffold(layer, psd))  #################need to make func
 
-        bool_tmp = tk.BooleanVar()
-        bool_tmp.set(False)
+        selected_tmp = tk.BooleanVar()
+        selected_tmp.set(False)
 
-        check_tmp = tk.Checkbutton(frame_tmp, variable=bool_tmp)
+        check_tmp = tk.Checkbutton(frame_tmp, variable=selected_tmp)
         check_tmp.grid(row=0, column=1)
-        check_tmp.bind('<Button-1>', self.make_fclicked_dev(layer, psd))  #################need to make func
+        # check_tmp.bind('<Button-1>', self.make_fclicked_dev(layer, psd))  #################need to make func
 
+        entry_tmp = tk.Entry(frame_tmp, width=12)
         if depth:
-            entry_tmp = tk.Entry(frame_tmp, width=12)
-            entry_tmp.insert(0, self.name)
+            entry_tmp.insert(0, layer.name)
             entry_tmp.config(state='readonly')
             entry_tmp.grid(row=0, column=2)
         else:
             ttk.Label(frame_tmp, text='レイヤー構造').grid(row=0, column=2)
 
-        if self.depth:
-            self.dict = {'bool': bool_tmp, 'entry': entry_tmp}
-        else:
-            self.dict = {'bool': bool_tmp}
+        frame_tmp.pack(anchor='w')
 
-        if self.is_group and depth:
-            button_tmp = tk.Button(frame_tmp, text='追加')
-            button_tmp.grid(row=0, column=3)
+        self.dict = {'label': label_tmp, 'selected': selected_tmp, 'check': check_tmp, 'entry': entry_tmp}
+
+        if layer.is_group():
+            button_tmp = tk.Button(frame_tmp, text='追加', command=print)  ################need to make func
+            button_tmp.grid(row=0, column=3) if depth else None
             self.dict['button'] = button_tmp
 
-            self.subframe_tmp = ttk.Frame(self)
-            self.subframe_tmp.pack()
+            folded_tmp = tk.BooleanVar()
+            folded_tmp.set(False)
+            self.dict['folded'] = folded_tmp
 
-        frame_tmp.pack(anchor='w')
-        return self
+            subframe_tmp = ttk.Frame(self, relief='groove', padding=1)
+            subframe_tmp.pack(anchor='w')
+            self.dict['subframe'] = subframe_tmp
+
 
 class HelpWindow(tk.Toplevel):
 
@@ -567,15 +606,15 @@ class RootWindow(tk.Tk):
         return self
 
 
-class test(HelpWindow):
-    def __init__(self, master=None):
-        super().__init__(master)
-        tk.Button(self, text='do', command=self.func).pack()
-        self.book.select(1)
-
-    def func(self, event=None):
-        print(self.book.select(), flush=True)
-        print(type(self.book.index(self.book.select())), flush=True)
+class test():
+    x = 0
+    @classmethod
+    def func(cls, i):
+        if test.x > 100:
+            return test.x
+        else:
+            test.x += i
+            return test.func(i)
 
 if __name__ == '__main__':
     root = RootWindow()
@@ -584,4 +623,5 @@ if __name__ == '__main__':
     # CtrlFrame(root).grid(row=1, column=0)
     # Anm_Frame(root).grid(row=2, column=0)
     # test()
-    root.mainloop()
+    # root.mainloop()
+    print(test().func(2))
