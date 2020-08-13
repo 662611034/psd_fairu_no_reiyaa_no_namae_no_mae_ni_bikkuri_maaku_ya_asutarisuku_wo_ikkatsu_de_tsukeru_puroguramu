@@ -386,15 +386,15 @@ class Anm_Frame(ttk.Frame):
 
 
 class ShowFrame(ttk.Frame):
-    def __init__(self, master, handler=None, width=240, height=720):
+    def __init__(self, master, psd=None, width=240, height=720):
         super().__init__(master)
         self.dict_widgets = {}
 
         self.canvas = tk.Canvas(self, width=width, height=height)
         self.frame_hierarchy = ttk.Frame(self.canvas)
 
-        if handler:
-            self.make_widgets(handler)
+        if psd:
+            self.make_widgets(psd)
 
         self.set_canvas().make_scrolls()
 
@@ -421,7 +421,7 @@ class ShowFrame(ttk.Frame):
         self.scroll_y.grid(row=0, column=1, sticky='ns')
         return self
 
-    def make_widgets(self, handler):
+    def make_widgets(self, psd):
         frame_tmp = ttk.Frame(self.frame_hierarchy)
         ttk.Label(frame_tmp, text='層', anchor='w').grid(row=0, column=0, sticky='w')
 
@@ -430,13 +430,13 @@ class ShowFrame(ttk.Frame):
 
         check_tmp = tk.Checkbutton(frame_tmp, variable=bool_tmp)
         check_tmp.grid(row=0, column=1)
-        check_tmp.bind('<Button-1>', self.make_fclicked(handler.psd, handler))
+        check_tmp.bind('<Button-1>', self.make_fclicked(psd, psd))
 
         ttk.Label(frame_tmp, text='レイヤー名', anchor='w').grid(row=0, column=2, sticky='w')
-        self.dict_widgets[id(handler.psd)] = {'bool': bool_tmp}
+        self.dict_widgets[id(psd)] = {'bool': bool_tmp}
 
         frame_tmp.pack(anchor='w')
-        for layer, depth in handler.layer_list():
+        for layer, depth in psd.all_layers():
 
             frame_tmp = ttk.Frame(self.frame_hierarchy)
 
@@ -447,7 +447,7 @@ class ShowFrame(ttk.Frame):
 
             check_tmp = tk.Checkbutton(frame_tmp, variable=bool_tmp)
             check_tmp.grid(row=0, column=1)
-            check_tmp.bind('<Button-1>', self.make_fclicked(layer, handler))
+            check_tmp.bind('<Button-1>', self.make_fclicked(layer, psd))
 
             entry_tmp = tk.Entry(frame_tmp, width=12)
             entry_tmp.insert(0, layer.name)
@@ -464,7 +464,7 @@ class ShowFrame(ttk.Frame):
             frame_tmp.pack(anchor='w')
         return self
 
-    def make_fclicked(self, layer, handler):
+    def make_fclicked(self, layer, psd):
 
         id_tmp = id(layer)
 
@@ -472,7 +472,7 @@ class ShowFrame(ttk.Frame):
         if layer.is_group():
             dict_range = {8: [], \
                     9: [id(sublayer) for sublayer in layer], \
-                    13: [id(sublayer) for sublayer, _ in handler.layer_list(layer)]}
+                    13: [id(sublayer) for sublayer, _ in psd.sublayers_recursive(layer)]}
         else:
             dict_range = {8: [], 9: [], 13: []}
 

@@ -1,8 +1,9 @@
+# import traceback
 import webbrowser
 import os
 import copy
 import gui
-import handler
+import psd_subtool
 import tkinter.filedialog as fd
 import tkinter.messagebox as mb
 
@@ -38,7 +39,7 @@ class AppTop(gui.RootWindow):
     def __init__(self,*args):
         super().__init__(*args)
 
-        self.handler = None
+        self.psd = None
         self.logger = Logger()
         self.dict_names = {}
 
@@ -100,12 +101,11 @@ class AppTop(gui.RootWindow):
     def make_callback(self, func, *mode):
         def f_callback(event=None):
             try:
-            # if True:
                 func(event, *mode)
                 return 'break'
-            # else:
             except Exception as e:
                 mb.showerror('エラーが発生しました', str(e))
+                # mb.showerror('エラーが発生しました', str(traceback.format_exc()))
 
         return f_callback
 
@@ -126,14 +126,14 @@ class AppTop(gui.RootWindow):
 
     def save_file(self, event, mode):
         # 0: 上書き, 1: 別名
-        if not self.handler:
+        if not self.psd:
             mb.showwarning('ファイルがありません', 'まずはファイルを開いてください')
             return 'break'
 
         if mode == 0:
             ofile_path = self.ifile_path
             msg = '上書き保存されました'
-            encoding = self.handler.encoding
+            encoding = self.psd.encoding
         elif mode == 1:
             ofile_path = fd.asksaveasfilename(filetypes=[('psd files', '*.psd')])
             if not ofile_path:
@@ -150,7 +150,7 @@ class AppTop(gui.RootWindow):
         return self
 
     def export_script(self, event, mode):
-        if not self.handler:
+        if not self.psd:
             mb.showwarning('ファイルがありません', 'まずはファイルを開いてください')
             return 'break'
 
@@ -187,7 +187,7 @@ class AppTop(gui.RootWindow):
 
     def convert(self, event, mode):
         # action 0: 「!」をつける, 1: 「*」をつける, 2: 消す
-        if not self.handler:
+        if not self.psd:
             mb.showwarning('ファイルがありません', 'まずはファイルを開いてください')
             return 'break'
 
@@ -195,7 +195,7 @@ class AppTop(gui.RootWindow):
         self.logger.stack_at(self.dict_names, 0)
         self.logger.reset(1)
 
-        for layer, depth in self.handler.layer_list():
+        for layer, depth in self.psd.all_layers():
             if self.make_condition(layer, depth, self.selected_tab()):
                 self.convert_subfunc(layer, mode)
 
@@ -222,14 +222,14 @@ class AppTop(gui.RootWindow):
 # from here, funcs need for open
     def open_subfunc(self, ifile_path):
         self.ifile_path = ifile_path
-        self.handler = handler.PSDHandler(self.ifile_path, self.get_encode())
+        self.psd = psd_subtool.PSDImageExt.open(self.ifile_path, self.get_encode())
 
         self.remake_frame_show()
 
-        self.set_combo_depth(list(range(self.handler.depth_max+1)))
+        self.set_combo_depth(list(range(self.psd.depth_max+1)))
 
         self.dict_names = {}
-        for layer, _ in self.handler.layer_list():
+        for layer, _ in self.psd.all_layers():
             self.dict_names[id(layer)] = layer.name
 
         self.logger.reset(0).reset(1)
@@ -243,10 +243,10 @@ class AppTop(gui.RootWindow):
 
     def remake_frame_show(self):
         self.frame_show.destroy()
-        self.frame_show = gui.ShowFrame(self, self.handler)
+        self.frame_show = gui.ShowFrame(self, self.psd)
 
         self.frame_show.grid(row=0, column=2, padx=12, pady=12)
-        for layer, _ in self.handler.layer_list():
+        for layer, _ in self.psd.all_layers():
             if layer.is_group():
                 button_tmp = self.frame_show.dict_widgets[id(layer)]['button']
                 button_tmp.config(command=self.make_callback(self.deal_anmlayer, 0, layer))
@@ -255,12 +255,12 @@ class AppTop(gui.RootWindow):
 # to here, funcs need for open
 
     def save_subfunc(self, ofile_path, encoding):
-        for layer, _ in self.handler.layer_list():
+        for layer, _ in self.psd.all_layers():
             layer.name = self.frame_show.get_dict_widgets()[id(layer)]['entry'].get()
 
-        self.handler.save(ofile_path, encoding)
+        self.psd.save(ofile_path, encoding)
         self.ifile_path = ofile_path
-        self.handler.encoding = encoding
+        self.psd.encoding = encoding
         return self
 
     def export_subfunc(self, efile_path):
@@ -268,7 +268,7 @@ class AppTop(gui.RootWindow):
 
         tracklines, valuelines = '', ''
         for tracknum, layer in enumerate(anmlayers):
-            trackline, valueline = self.handler.export_anmscript(layer, tracknum)
+            trackline, valueline = self.psd.export_anmscript(layer, tracknum)
             tracklines += trackline
             valuelines += '\n' + valueline
 
@@ -282,7 +282,7 @@ class AppTop(gui.RootWindow):
     def convert_subfunc(self, layer, mode):
         entry_target = self.frame_show.get_dict_widgets()[id(layer)]['entry']
         entry_target.config(state='normal')
-        symbols = self.handler.EXCEPTLIST  # ('!', '*')
+        symbols = self.psd.HEADSYMBOLS  # ('!', '*')
 
         if mode in [0, 1] and not (entry_target.get()[0] in symbols):
             entry_target.insert(0, symbols[mode])
@@ -323,12 +323,12 @@ class AppTop(gui.RootWindow):
 # to here, funcs need for conversion
 
     def cache_names(self):
-        for layer, _ in self.handler.layer_list():
+        for layer, _ in self.psd.all_layers():
             self.dict_names[id(layer)] = self.frame_show.get_dict_widgets()[id(layer)]['entry'].get()
         return self
 
     def refresh_names(self):
-        for layer, _ in self.handler.layer_list():
+        for layer, _ in self.psd.all_layers():
             entry_target = self.frame_show.get_dict_widgets()[id(layer)]['entry']
             entry_target.config(state='normal')
             entry_target.delete(0, 'end')
@@ -338,7 +338,7 @@ class AppTop(gui.RootWindow):
 
 
 root = AppTop()
-ifile_path = './sample.psd'
-ifile_path = r'C:\Users\user\Pictures\sample.psd'
+# ifile_path = './sample.psd'
+# ifile_path = r'C:\Users\user\Pictures\sample.psd'
 # root.open_subfunc(ifile_path)
 root.mainloop()
