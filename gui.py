@@ -310,7 +310,7 @@ class LayerFrame(ttk.Frame):
 
 
 class ShowFrame(ttk.Frame):
-    def __init__(self, master, psd=None, width=240, height=720):
+    def __init__(self, master, width=240, height=720):
         super().__init__(master)
         self.dict_widgets = {}
         self.width = width
@@ -318,9 +318,6 @@ class ShowFrame(ttk.Frame):
 
         self.canvas = tk.Canvas(self, width=width, height=height)
         self.frame_hierarchy = ttk.Frame(self.canvas)
-
-        if psd:
-            self.make_widgets(psd)
 
         self.set_canvas().make_scrolls()
 

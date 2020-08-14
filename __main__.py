@@ -7,13 +7,11 @@ import psd_subtool
 import tkinter.filedialog as fd
 import tkinter.messagebox as mb
 
-tk = gui.tk
-ttk = gui.ttk
 URL = 'https://github.com/662611034/psd_fairu_no_reiyaa_no_namae_no_mae_ni_bikkuri_maaku_ya_asutarisuku_wo_ikkatsu_de_tsukeru_puroguramu'
 
 
 class Logger():
-    def __init__(self, length=256):
+    def __init__(self, length=128):
         self.log_length = length
         self.logs = [[], []]  # 0: back, 1: fore
 
