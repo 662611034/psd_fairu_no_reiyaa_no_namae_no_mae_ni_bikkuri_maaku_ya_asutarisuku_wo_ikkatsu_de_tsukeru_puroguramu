@@ -65,7 +65,8 @@ class PSDImageExt(psd_tools.PSDImage):
         trackline = f'--track{tracknum}:{layer.name},0,{len(layer)},0,1\n'
         valueline = 'local values = {\n'
         for sublayer in layer:
-            valueline += f'  "v1.{self.layer_fullpath(sublayer)}",\n'
+            fullpath = self.layer_fullpath(sublayer).replace(' ', '%20')
+            valueline += f'  "v1.{fullpath}",\n'
         valueline += '}\n'
         valueline += f'PSD:addstate(values, obj.track{tracknum})\n'
 
