@@ -1,5 +1,5 @@
 # ダウンロード
-最新版は[こちら](https://drive.google.com/file/d/1o9iAOm7YzKWD_353Jui339XMydosRV6g/view?usp=sharing)のリンクからダウンロードできます。容量が大きくてgithubにアップロードできませんでした。   
+最新版は[こちら](https://drive.google.com/file/d/1VJp48N6k1W63HtVY4Dgde4jVFb_y72NG/view?usp=sharing)のリンクからダウンロードできます。容量が大きくてgithubにアップロードできませんでした。   
 過去バージョンはアップデート履歴からダウンロードできます。
 
 # このプログラムについて
@@ -20,7 +20,7 @@
   - 削除対象も条件を指定できるようにしました
   - 以上に伴いGUIに変更を加えました
   - 変換時スクロール位置がリセットされないようにしました(昼上げなおしver.)
-- [2020.08.15](https://drive.google.com/file/d/1QSBuJZmZASRPfL7sbQGpIURRMN8NdbxW/view?usp=sharing)
+- [2020.08.15](https://drive.google.com/file/d/1VJp48N6k1W63HtVY4Dgde4jVFb_y72NG/view?usp=sharing)
   - 一部のボタンを上段メニューバーに変更しました
   - ファイルを開くときと保存するとき文字コードを指定できるようにしました
   - 変換対象レイヤーをチェックボックスで選択できるようにしました
