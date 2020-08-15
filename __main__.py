@@ -315,6 +315,8 @@ class AppTop(gui.RootWindow):
 
     def export_subfunc(self, efile_path):
         anmlayers = self.get_anmlayers()
+        if not anmlayers:
+            return self
 
         tracklines, valuelines = '', ''
         for tracknum, layer in enumerate(anmlayers):
