@@ -322,7 +322,7 @@ class ShowFrame(ttk.Frame):
         self.set_canvas().make_scrolls()
 
     def set_canvas(self):
-        self.canvas.create_window(0, 0, window=self.frame_hierarchy)
+        self.canvas.create_window(0, 0, window=self.frame_hierarchy, anchor='n')
         self.canvas.update_idletasks()
         self.canvas.configure(scrollregion=self.canvas.bbox('all'))
 
