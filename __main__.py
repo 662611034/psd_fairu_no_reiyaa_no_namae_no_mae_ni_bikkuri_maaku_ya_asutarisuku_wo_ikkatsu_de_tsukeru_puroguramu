@@ -38,6 +38,7 @@ class AppTop(gui.RootWindow):
         super().__init__(*args)
 
         self.psd = None
+        self.flag_saved = True
         self.logger = Logger()
         self.dict_names = {}
 
@@ -124,6 +125,7 @@ class AppTop(gui.RootWindow):
         self.show_filename(self.ifile_path)
         self.show_msg('ファイルを開きました')
 
+        self.flag_saved = True
         return self
 
     def save_file(self, event, mode):
@@ -149,12 +151,17 @@ class AppTop(gui.RootWindow):
 
         self.show_filename(self.ifile_path)
         self.show_msg(msg)
+
+        self.flag_saved = True
         return self
 
     def export_script(self, event, mode):
         if not self.psd:
             mb.showwarning('ファイルがありません', 'まずはファイルを開いてください')
             return 'break'
+
+        if not self.flag_saved:
+            self.save_file(None, 0)
 
         if mode == 0:
             efile_path = self.ifile_path[:-4] + self.get_anmtail() + '.anm'
@@ -185,10 +192,12 @@ class AppTop(gui.RootWindow):
 
         if self.logger.is_empty(mode):
             self.unre_state(mode, 0)
+
+        self.flag_saved = False
         return self
 
     def convert(self, event, mode):
-        # action 0: 「!」をつける, 1: 「*」をつける, 2: 消す
+        # mode 0: 「!」をつける, 1: 「*」をつける, 2: 消す
         if not self.psd:
             mb.showwarning('ファイルがありません', 'まずはファイルを開いてください')
             return 'break'
@@ -202,6 +211,8 @@ class AppTop(gui.RootWindow):
                 self.convert_subfunc(layer, mode)
 
         self.unre_state(0, 1).unre_state(1, 0)
+
+        self.flag_saved = False
         return self
 
     def mode_select(self, event):
@@ -249,7 +260,6 @@ class AppTop(gui.RootWindow):
             self.menu_file.entryconfig(i, state='normal')
         for i in [0, 1, 2, 4, 5]:
             self.menu_edit.entryconfig(i, state='normal')
-
         return self
 
     def remake_frame_show(self):
