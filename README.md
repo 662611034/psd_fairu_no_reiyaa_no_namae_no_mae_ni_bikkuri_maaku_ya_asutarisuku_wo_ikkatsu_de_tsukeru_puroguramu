@@ -28,8 +28,8 @@
   - .anmファイルの書き出し機能を追加しました
   - 以上に伴いGUIに変更を加えました
   - psdファイルを扱うためのクラスが大幅に変更されました
-- [2020.08.24](https://drive.google.com/file/d/1uP40FkmhM3ZPyu3QOFARdCOSLCOpVcLd/view?usp=sharing)
-  - .anmファイルの書き出しを行う際自動で上書き保存されるように変更しました
+- [2020.08.25](https://drive.google.com/file/d/1uP40FkmhM3ZPyu3QOFARdCOSLCOpVcLd/view?usp=sharing)
+  - .anmファイルの書き出しを行う際、自動で上書き保存されるように変更しました
   
 # 使い方
 ダウンロードした.exeファイルを実行し、上段の「ファイル」メニューから編集したい.psdファイルを開くと以下のような画面になります。   
