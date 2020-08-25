@@ -1,6 +1,16 @@
 import tkinter as tk
 import tkinter.ttk as ttk
 
+'''
+tkinterを用いてGUIの各パートを生成するクラスを定義している
+
+各クラスのメソッドの中で「_tmp」付きで定義したものは
+あとから参照することがないオブジェクト。
+変数名を考える労力を減らすためにそういう名前になった
+(改修するとき後悔するのかな)
+'''
+
+# 以下にはヘルプウィンドウに表示されるメッセージを定義する
 
 FILEMSG='''
 ・ファイルを開くとき文字コードを指定することができます
@@ -82,11 +92,26 @@ HOTKEYS = '''
 
 
 class FileFrame(ttk.Frame):
+    '''
+    ファイルを開くボタンやファイルのパスを表示するフレーム
+
+    Attributes
+    ----------
+    label_msg: tk.Label
+        「ファイルを開きました」などを表示するラベル
+    label_filename: tk.Label
+        ファイルのパスを表示するラベル
+    combo_encode: ttk.Combobox
+        文字コード選択のプルダウンメニュー
+    '''
     def __init__(self, master=None, **kwargs):
         super().__init__(master, **kwargs)
         self.make_self()
 
     def make_self(self):
+        '''
+        各種ウィジェットを生成・配置するメソッド
+        '''
         self.label_msg = tk.Label(self, text='')
         self.label_filename = ttk.Label(self, text='作業中のファイルはありません', width=60)
 
@@ -102,19 +127,69 @@ class FileFrame(ttk.Frame):
         return self
 
     def show_msg(self, msg):
+        '''
+        label_msgの表示内容を変更する
+
+        Parameters
+        ----------
+        msg: str
+            表示する内容
+        '''
         self.label_msg.config(text=msg)
         return self
 
     def show_filename(self, filename):
+        '''
+        label_filenameの表示内容を変更する
+
+        Parameters
+        ----------
+        msg: str
+            表示する内容
+        '''
         self.label_filename.config(text=filename)
         return self
 
     def get_encode(self):
+        '''
+        選択されている文字コードを取得する
+
+        Returns
+        -------
+        : str
+            文字コード('sjis'、'utf8'など)
+        '''
         return self.combo_encode.get()
 
 
 class CtrlFrame(ttk.Frame):
+    '''
+    変換条件やボタンがあるフレーム
+    qc: quick convert、チェックを入れたレイヤーを返還する
+    cc: convert by condition、階層やら何やら条件を指定して変換
+
+    Attributes
+    ----------
+    book: ttk.Notebook
+        変換条件を選ぶタブのウィジェット
+    combo_depth: ttk.Combobox
+        階層条件を指定するプルダウンメニュー
+    entry_word: tk.Entry
+        レイヤーの名前の条件になる文字列を入れる入力フォーム
+    combo_match: ttk.Combobox
+        レイヤーの名前と文字列が「一致するか」「包含関係か」を選ぶプルダウンメニュー
+    combo_class: ttk.Combobox
+        レイヤー、グループ、その両方、あるいはグループ直下のものを選ぶプルダウンメニュー
+    button_converts: list
+        tk.Buttonの配列。「!」をつける、「*」をつける、記号を消すボタン
+    
+    '''
     def __init__(self, master=None, **kwargs):
+        '''
+        ウィジェット生成をいくつかのメソッドに小分けし
+        コンストラクタ内で実行している
+        self.bookはここで生成する
+        '''
         super().__init__(master, **kwargs)
         ttk.Label(self, text='変換対象選択条件', font=('', 11), anchor='w').pack(anchor='w', pady=12)
         self.book = ttk.Notebook(self)
@@ -124,12 +199,21 @@ class CtrlFrame(ttk.Frame):
         self.make_buttons()
 
     def make_frame_qc(self):  # qc: quick convert
+        '''
+        チェックを入れたレイヤーを変換するモードのタブに置くフレームを生成
+        ラベルを一つ作るだけ
+        '''
         frame_tmp = ttk.Frame(self.book)
         ttk.Label(frame_tmp, text='チェックを入れたレイヤーが変換されます', font=('', 12)).pack(pady=24)
         self.book.add(frame_tmp, text='チェックしたレイヤー')
         return self
 
     def make_frame_cc(self):  # cc: convert by condition
+        '''
+        条件指定で変換するモードのタブに置くフレームを生成
+        ラベル、プルダウンメニュー、入力フォームなどを次々と置いていく
+        combo_depthだけはpsdファイルが読み込まれた後に中身を入れる(最大階層がわからないため)
+        '''
         frame_tmp = ttk.Frame(self)
 
         column = 1
@@ -167,6 +251,9 @@ class CtrlFrame(ttk.Frame):
         return self
 
     def make_buttons(self):
+        '''
+        変換ボタン3つを作る
+        '''
         frame_tmp = ttk.Frame(self)
 
         texts = ['「!」をつける', '「*」をつける', '「!」と「*」を消す']
@@ -179,15 +266,43 @@ class CtrlFrame(ttk.Frame):
         return self
 
     def selected_tab(self):
-        # 0: qc, 1: cc
+        '''
+        現在選択されているタブを整数で返す
+
+        Returns
+        -------
+        : int
+            qcなら0、ccなら1
+        '''
         return self.book.index(self.book.select())
 
     def select_tab(self, index):
-        # 0: qc, 1: cc
+        '''
+        タブを選択する
+
+        Parameters
+        ----------
+        index: int
+            qcなら0、ccなら1
+        '''
         self.book.select(index)
         return self
 
     def get_condition(self):
+        '''
+        条件指定変換において、各選択項目の値を取得して返す
+
+        Returns
+        -------
+        c_depth: int
+            階層
+        c_words: str
+            入力フォームの文字列
+        c_match: int
+            レイヤー名一致条件。0: 文字列を含む、1: 文字列と一致する
+        c_class: int
+            対象の種類。0: 物、1: レイヤー、2: グループ、3: グループ直下の物
+        '''
         c_depth = self.combo_depth.current()
         c_words = self.entry_word.get()
         c_match = self.combo_match.current()  # 0: include, 1: same
@@ -195,18 +310,48 @@ class CtrlFrame(ttk.Frame):
         return c_depth, c_words, c_match, c_class  # int, str, int, int
 
     def set_combo_depth(self, values):
+        '''
+        階層プルダウンメニューに値を設定する
+
+        Parameters
+        ----------
+        values: list
+            階層(整数)のリスト。0 ~ psdファイルのdepth_max
+        '''
         self.combo_depth.config(values = values)
         self.combo_depth.current(0)
         return self
 
 
 class Anm_Frame(ttk.Frame):
+    '''
+    .anmファイルの書き出し機能関連ウィジェットのフレーム
+
+    Attributes
+    ----------
+    anmlayers: list
+        .anmファイルに書き出すレイヤーグループのリスト
+    label_anmlist: list
+        書き出し対象レイヤーの名前を表示するラベルのリスト
+    button_clears: list
+        書き出し対象レイヤーを「1つ外す」「全部外す」ボタンのリスト
+    entry_anmtail: tk.Entry
+        既定の名前で書きだす場合ファイル名の末尾に加える文字列を入力するためのフォーム
+    button_exports: list
+        「既定の名前で書き出す」「名前を指定して書き出す」のボタンのリスト
+    '''
     def __init__(self, master, **kwargs):
+        '''
+        ウィジェットの生成とanmlayersの定義
+        '''
         super().__init__(master, **kwargs)
         self.make_self()
         self.anmlayers = []
 
     def make_self(self):
+        '''
+        各種ウィジェットの生成と配置メソッド
+        '''
         ttk.Label(self, text='・.anm書き出し', font=('', 11), anchor='w').grid(row=0, column=0, columnspan=2, sticky='w', padx=6, pady=6)
 
         #subframe 0
@@ -245,6 +390,15 @@ class Anm_Frame(ttk.Frame):
         return self
 
     def stack_anmlayers(self, layer):
+        '''
+        書き出し対象レイヤーをanmlayersに追加し、それを表示する(ラベルの文字列を変更する)
+        リストの要素数が4つ以上であればなにもしない
+
+        Parameters
+        ----------
+        layer: psd_tools.api.layers.Group
+            対象のレイヤーグループ
+        '''
         if len(self.anmlayers) > 3:
             return self
         self.anmlayers.append(layer)
@@ -252,6 +406,10 @@ class Anm_Frame(ttk.Frame):
         return self
 
     def pop_anmlayers(self):
+        '''
+        書き出し対象レイヤーをanmlayersから一つ外し、それを表示する(ラベルの文字列を変更する)
+        リストの要素数が0であればなにもしない
+        '''
         if not self.anmlayers:
             return self
         self.anmlayers.pop()
@@ -259,21 +417,87 @@ class Anm_Frame(ttk.Frame):
         return self
 
     def clear_anmlayers(self):
+        '''
+        anmlayersを空リストに初期化し、それを表示する
+        '''
         self.anmlayers = []
         for label in self.label_anmlist:
             label.config(text='')
         return self
 
     def get_anmlayers(self):
+        '''
+        書き出し対象レイヤーを返す
+
+        Returns
+        -------
+        anmlayers: list
+            書き出し対象レイヤーのリスト
+        '''
         return self.anmlayers
 
     def get_anmtail(self):
+        '''
+        anmtailに入力されている文字列を返す
+
+        Returns
+        -------
+        : str
+            入力内容の文字列
+        '''
         return self.entry_anmtail.get()
 
 
 class LayerFrame(ttk.Frame):
+    '''
+    レイヤー構造表示領域においてレイヤーごとに生成されるフレーム
+    レイヤーの階層、枝分かれ記号、名前、グループであれば追加ボタンなどが配置される
+    グループの折りたたみをtkinterのpackとpack_forgetで処理するために各レイヤーごとにフレームを生成し、
+    もしグループであればグループに属するレイヤーはグループが表示されるレイヤーの上に
+    別のレイヤーを作ってpackする
+
+    構造図解
+    master: ShowFrame.canvas、あるいは上位グループのsubframe_tmp
+        |- self
+            |- frame_tmp: ここにレイヤー名やボタンなどが配置される
+            |- subframe_tmp: このサブフレームが下層レイヤーにとってのmasterになる
+
+    グループでない場合無駄にフレームを二つ作ることになるが、場合分けすると頭が痛くなるため妥協
+    gridを使ってうまい感じcolumnを指定すればスマートにできる気もするが、頭が痛くなるため妥協
+    packを使ってフレームの入れ子構造にするとreliefの視覚的効果で「同じグループがまとまってる感」も
+    出るのでこのままでいいと思う
+
+    Attributes
+    ----------
+    dict: dict
+        あとから参照する必要があるオブジェクトを辞書型で保存
+        label: 枝分かれ記号の表示部分。押したとき下位レイヤー表示を折りたたむ機能を後でバインドする
+        selected: チェックボックスにチェックが入ってるかの真理値
+        check: チェックボックス。shift+clickで一括チェックする機能をあとでバインドする
+        entry: レイヤー名が入ってるreadonly入力フォーム。レイヤー名変換をしたとき中身を編集する
+
+        button: .anm書き出し対象に追加するボタン
+        folded: 下位レイヤーの表示が折りたたまれているかを保存する真理値
+        subframe: 下位レイヤーを配置するフレーム
+    '''
 
     def __init__(self, master, layer, depth, **kwargs):
+        '''
+        レイヤーオブジェクトと階層を受け取ってウィジェットを生成する
+        depth=0、すなわちpsdファイル自身は表示内容が特別であるため(枝分かれ記号を表示しないとか)
+        if depth文を多用している。もっとスマートにできないものか
+
+        各ウィジェットはdictでまとめるためメソッド内では全て_tmpつきのローカル変数になっている
+
+        Parameters
+        ----------
+        master: tkinter object
+            ウィジェットを配置できるtkinterオブジェクト。Tk、Frame、Canvasなど
+        layer: psd_tools.api.layers.Group / PixelLayer
+            レイヤー
+        depth: int
+            レイヤーの階層
+        '''
         super().__init__(master, **kwargs)
 
         frame_tmp = ttk.Frame(self)
@@ -301,7 +525,7 @@ class LayerFrame(ttk.Frame):
         self.dict = {'label': label_tmp, 'selected': selected_tmp, 'check': check_tmp, 'entry': entry_tmp}
 
         if layer.is_group():
-            button_tmp = tk.Button(frame_tmp, text='追加', command=print)  ################need to make func
+            button_tmp = tk.Button(frame_tmp, text='追加')
             button_tmp.grid(row=0, column=3) if depth else None
             self.dict['button'] = button_tmp
 
@@ -315,7 +539,50 @@ class LayerFrame(ttk.Frame):
 
 
 class ShowFrame(ttk.Frame):
+    '''
+    レイヤー構造表示領域のフレーム
+    中にLayerFrameを再帰的に大量に生成する
+
+    tkinter.Frameでは固定サイズにしてスクロールバーで表示を移動することができないらしくてcanvasを使っている
+    canvasの大きさを親フレームに合わせて変える方法も調べたがうまくいかなかったため固定サイズになっている
+
+    Attributes
+    ----------
+    dict_widgets: dict
+        各レイヤーのLayerFrame.dictをまとめた辞書
+        keyとしてレイヤーオブジェクトのメモリアドレス(id)を使っている
+        layerオブジェクトにすると名前変えたとき正常に認識しない
+        レイヤー名は重複することがあるため使えない
+        リストにして番号で割りふることも考えたがその番号をどこかに保存してなければならない
+        ということでidをkeyとしている
+    width: int
+        canvasの幅。新しいファイルを開いてcanvasを作り直すとき使いまわすために保存しておく
+    height: int
+        canvasの高さ。新しいファイルを開いてcanvasを作り直すとき使いまわすために保存しておく
+    canvas: tk.Canvas
+        ここにLayerFrameを置いていく
+    frame_hierarchy: tk.Frame
+        レイヤー構造表示フレームのうち最上位の物
+    scroll_x: tk.Scrollbar
+        canvasの横方向スクロールバー
+    scroll_y: tk.Scrollbar
+        canvasの縦方向スクロールバー
+    '''
+
     def __init__(self, master, width=240, height=720):
+        '''
+        いくつかのインスタンス変数の初期
+        そして空のframe_hierarchyを生成したりスクロールバーを配置する
+
+        Parameters
+        ----------
+        master: tkinter object
+            ウィジェットを配置できるtkinterオブジェクト。Tk、Frame、Canvasなど
+        width: int
+            canvasの幅
+        height: int
+            canvasの高さ
+        '''
         super().__init__(master)
         self.dict_widgets = {}
         self.width = width
@@ -327,6 +594,10 @@ class ShowFrame(ttk.Frame):
         self.set_canvas().make_scrolls()
 
     def set_canvas(self):
+        '''
+        canvasの初期設定
+        意味はよくわからないが、frame_hierarchyをおいて表示させたりするのに必要
+        '''
         self.canvas.create_window(0, 0, window=self.frame_hierarchy, anchor='n')
         self.canvas.update_idletasks()
         self.canvas.configure(scrollregion=self.canvas.bbox('all'))
@@ -338,6 +609,15 @@ class ShowFrame(ttk.Frame):
         return self
 
     def remake_canvas(self, psd):
+        '''
+        psdファイルを開いたときもともとあったウィジェットを全て破壊して
+        新しく作り直すメソッド
+
+        Parameters
+        ----------
+        pad: PSDImageExt
+            対象のpsdファイルのオブジェクト
+        '''
         self.frame_hierarchy.destroy()
         self.canvas.destroy()
         self.scroll_x.destroy()
@@ -349,6 +629,9 @@ class ShowFrame(ttk.Frame):
         self.set_canvas().make_scrolls()
 
     def make_scrolls(self):
+        '''
+        スクロールバーを作ってcanvasの表示と連動させるメソッド
+        '''
         self.scroll_x = tk.Scrollbar(self, orient='horizontal', command=self.canvas.xview)
         self.scroll_y = tk.Scrollbar(self, orient='vertical', command=self.canvas.yview)
         self.canvas.configure(yscrollcommand=self.scroll_y.set, xscrollcommand=self.scroll_x.set)
@@ -361,6 +644,31 @@ class ShowFrame(ttk.Frame):
         return self
 
     def make_widgets_recursive(self, master, layer=None, depth=0):
+        '''
+        レイヤーオブジェクトを受け取って再帰的にLayerFrameのインスタンスを作るメソッド
+        layerがNoneの場合の処理はコンストラクタで使うために定義したけど特に意味がなかった模様
+        基本的にはlayer=psdファイルオブジェクトを渡して全レイヤー構造を表示させるために使う
+
+        動き:
+        渡されたlayerとdepthからLayerFrameを生成し、そのdictをdict_widgetsに追加
+        生成したLayerFrameをpackしたあと、もしlayerがグループであればその下位レイヤーをを
+        引数としてmake_widgets_recursiveを実行し、返還されるフレームをpackしていく
+        この時masterにはdict['subframe']を、depthには1増えたdepthを与える
+
+        Parameters
+        ----------
+        master: tkinter object
+            ウィジェットを配置できるtkinterオブジェクト。Tk、Frame、Canvasなど
+        layer: psd_tools.api.layers.Group / PixelLayer
+            レイヤー
+        depth: int
+            レイヤーの階層
+
+        Returns
+        -------
+        frame_tmp: tk.Frame
+            再帰的に配置されたレイヤー構造ウィジェットの最上位フレーム
+        '''
         if not layer:
             return ttk.Frame(master)
         
@@ -369,8 +677,6 @@ class ShowFrame(ttk.Frame):
         frame_tmp.pack(anchor='w')
 
         if layer.is_group():
-            # frame_tmp.dict['check'].bind('<Button-1>', self.make_fcheck(layer))
-            # frame_tmp.dict['label'].bind('<Button-1>', self.make_ffold(layer)) if depth else None
             for sublayer in layer:
                 self.make_widgets_recursive(frame_tmp.dict['subframe'], sublayer, depth+1).pack(anchor='w')
 
@@ -378,6 +684,15 @@ class ShowFrame(ttk.Frame):
 
 
 class HelpWindow(tk.Toplevel):
+    '''
+    Helpを押したとき表示されるウィンドウ
+    インスタンスメソッドは項目別のタブにヘルプ文字列を配置するだけ
+
+    Attributes
+    ----------
+    book: ttk.Notebook
+        各項目別のフレームを配置するタブメニュー
+    '''
 
     def __init__(self, master=None, **kwargs):
         super().__init__(master, **kwargs)
@@ -421,8 +736,25 @@ class HelpWindow(tk.Toplevel):
 
 
 class RootWindow(tk.Tk):
+    '''
+    アプリのトップウィンドウ
+
+    Attributes
+    ----------
+    frame_file: FileFrame
+        ファイル関連ウィジェットが配置されたフレーム
+    frame_ctrl: CtrlFrame
+        変換関連ウィジェットが配置されたフレーム
+    frame__anm: Anm_Frame
+        .anmファイル書き出し関連ウィジェットが配置されたフレーム
+    frame_show: ShowFrame
+        レイヤー構造表示領域のフレーム
+    '''
 
     def __init__(self, **kwargs):
+        '''
+        小分けした初期化メソッドをまとめて実行し、ウィンドウの表示名を変える
+        '''
         super().__init__(**kwargs)
         self.make_menu()
         self.make_widgets()
@@ -430,6 +762,9 @@ class RootWindow(tk.Tk):
         self.title('.psdファイルのレイヤーの名前の前に「!」や「*」を一括でつけるプログラム')
 
     def make_widgets(self):
+        '''
+        各フレームを生成して配置する
+        '''
         frame_L = ttk.Frame(self)
         self.frame_file = FileFrame(frame_L)
         self.frame_file.pack(anchor='w')
@@ -449,8 +784,12 @@ class RootWindow(tk.Tk):
 
         self.frame_show = ShowFrame(self)
         self.frame_show.grid(row=0, column=2, padx=12, pady=12)
+        return self
 
     def alias_obj(self):
+        '''
+        下位フレームのインスタンスメソッドを自らのインスタンスメソッドとして定義する
+        '''
         self.show_msg = self.frame_file.show_msg
         self.show_filename = self.frame_file.show_filename
         self.get_encode = self.frame_file.get_encode
@@ -472,6 +811,10 @@ class RootWindow(tk.Tk):
         return self
 
     def make_menu(self):
+        '''
+        トップバーメニューを生成する
+        書き出しや変換メニューは最初は非活性化の状態にしておく
+        '''
         self.menu_root = tk.Menu(self)
 
         self.menu_file = tk.Menu(self.menu_root, tearoff=0)
@@ -508,7 +851,17 @@ class RootWindow(tk.Tk):
         return self
 
     def unre_state(self, which, state):
-        # 0: 戻す, 1: やり直す
+        '''
+        「戻す」と「やり直す」メニューは変換ログの状態によって頻繁に活性化・非活性化状態を変える
+        そのため、簡単に制御できるようにメソッドとして定義する
+
+        Parameters
+        ----------
+        which: int
+            どのメニューを指定するか。0: 戻す、1: やり直す
+        state: int
+            させたい状態。0: 非活性化、1: 活性化
+        '''
         self.menu_edit.entryconfig(which+4, state='normal' if state else 'disabled')
         return self
 
