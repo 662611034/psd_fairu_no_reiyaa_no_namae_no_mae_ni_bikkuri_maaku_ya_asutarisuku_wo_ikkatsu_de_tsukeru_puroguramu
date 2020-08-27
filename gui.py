@@ -1,6 +1,3 @@
-import tkinter as tk
-import tkinter.ttk as ttk
-
 '''
 tkinterを用いてGUIの各パートを生成するクラスを定義している
 
@@ -9,6 +6,9 @@ tkinterを用いてGUIの各パートを生成するクラスを定義してい�
 変数名を考える労力を減らすためにそういう名前になった
 (改修するとき後悔するのかな)
 '''
+
+import tkinter as tk
+import tkinter.ttk as ttk
 
 # 以下にはヘルプウィンドウに表示されるメッセージを定義する
 
