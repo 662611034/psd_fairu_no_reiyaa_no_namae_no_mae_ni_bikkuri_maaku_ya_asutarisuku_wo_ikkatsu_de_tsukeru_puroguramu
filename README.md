@@ -1,5 +1,5 @@
 # ダウンロード
-最新版は[こちら](https://drive.google.com/file/d/1uP40FkmhM3ZPyu3QOFARdCOSLCOpVcLd/view?usp=sharing)のリンクからダウンロードできます。容量が大きくて(84MBほど)githubにアップロードできませんでした。   
+最新版は[こちら](https://drive.google.com/file/d/1ig9vFRNgkwyo1KVHxzOwVLjOg668jw-Y/view?usp=sharing)のリンクからダウンロードできます。容量が大きくて(84MBほど)githubにアップロードできませんでした。   
 過去バージョンはアップデート履歴からダウンロードできます。
 
 # このプログラムについて
@@ -36,6 +36,9 @@
   - psdファイルを扱うためのクラスが大幅に変更されました
 - [2020.08.25](https://drive.google.com/file/d/1uP40FkmhM3ZPyu3QOFARdCOSLCOpVcLd/view?usp=sharing)
   - .anmファイルの書き出しを行う際、自動で上書き保存されるように変更しました
+- [2020.09.06](https://drive.google.com/file/d/1ig9vFRNgkwyo1KVHxzOwVLjOg668jw-Y/view?usp=sharing)
+  - ヘルプの文章の誤字を修正しました
+  - .exe形式だとアンチウイルスソフトによってダウンロードできない場合があるとのことなので.zip形式でアップロードしました
   
 # 使い方
 ダウンロードした.exeファイルを実行し、上段の「ファイル」メニューから編集したい.psdファイルを開くと以下のような画面になります。   
