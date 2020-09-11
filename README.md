@@ -7,12 +7,7 @@
 
 ## .exeの動作環境
 64bitのWindows10での動作を確認できました。ビルドに用いたツールの仕様上32bit Windowsでは動作しません。   
-### 64bit Windows以外の方
-さすが非Windows環境でpsdtoolkitを使われている方はいらっしゃらないと思いますが、もしいらしたら
-- Python3
-- psd_tools
-- tkinter
-をインストールし、スクリプトファイル(.pyファイル3つ)をダウンロードして__main__.pyをPython3で実行させればご利用いただけると思います。
+非Windows環境では.pyファイルをダウンロードしPythonで実行することができますが、クリックなどの操作のプログラム内での挙動がWindowsと異なるため正常に動作しません。
 
 ## アップデート履歴
 - [2020.08.06](https://drive.google.com/file/d/1jxZIbeXXMJca6zSsArGFlmtMsuSjPM71/view?usp=sharing)
