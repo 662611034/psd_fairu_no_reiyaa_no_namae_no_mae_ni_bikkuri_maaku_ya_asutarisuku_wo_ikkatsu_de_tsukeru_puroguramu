@@ -34,6 +34,9 @@
 - [2020.09.06](https://drive.google.com/file/d/1ig9vFRNgkwyo1KVHxzOwVLjOg668jw-Y/view?usp=sharing)
   - ヘルプの文章の誤字を修正しました
   - .exe形式だとアンチウイルスソフトによってダウンロードできない場合があるとのことなので.zip形式でアップロードしました
+- 2020.09.11
+  - [目パチ口パクのスクリプト生成をちょっとだけ楽にする機能のベータ版](https://drive.google.com/file/d/1QXlDRTCUbT0Uqt0PJiJT7s4oZQRcj52-/view?usp=sharing)を配布します
+ 
   
 # 使い方
 ダウンロードしたzipファイルを解凍し、中の.exeファイルを実行します。  
