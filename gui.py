@@ -882,5 +882,4 @@ if __name__ == '__main__':
     # FileFrame(root).grid(row=0, column=0)
     # CtrlFrame(root).grid(row=1, column=0)
     # Anm_Frame(root).grid(row=2, column=0)
-    # test()
     # root.mainloop()
