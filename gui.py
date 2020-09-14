@@ -9,6 +9,7 @@ tkinterを用いてGUIの各パートを生成するクラスを定義してい�
 
 import tkinter as tk
 import tkinter.ttk as ttk
+import pyperclip
 
 # 以下にはヘルプウィンドウに表示されるメッセージを定義する
 
@@ -87,7 +88,34 @@ HOTKEYS = '''
 
 ・ctrl+a / ctrl+shift+a：全てのレイヤーにチェックを入れる / 外す
 
+・ctrl+d：入力欄をクリア(目パチ口パク生成タブにて)
+
 ・ctrl+q：終了
+'''
+
+
+SCRIPTMSG = '''
+目パチ口パク生成について
+
+・基本的には公式のスクリプト生成ページと同じ文字列を生成します
+
+・公式と異なる点は、文末に「,」がつくことと、
+　画面下部の出力欄に生成されたスクリプトを貯められるところです
+
+・出力された文字列は公式の場合と同じように.anmファイルに貼り付けて使います
+
+・スクリプト生成のために必要なレイヤーパスは
+　レイヤー名表示領域のレイヤー名をダブルクリックするとクリップボードにコピーされます
+
+・生成されたスクリプトも、出力欄をダブルクリックすることでコピーできます
+
+・入力欄が「開き」「ほぼ閉じ」などと分けられていますが、
+　スクリプトはレイヤーの順番と個数にしか依存しないため、詰めて入力しても構いません
+　例）開いた目と閉じた目のレイヤーを「開き」と「ほぼ開き」に入れても、
+　　　「半開き」と「ほぼ閉じ」に入れても、「ほぼ開き」と「ほぼ閉じ」に入れても、
+　　　結果は同じです
+
+・目パチ、口パクシンプル、口パクあいうえおの入出力フォームは全て独立で機能します
 '''
 
 
@@ -172,7 +200,7 @@ class CtrlFrame(ttk.Frame):
     ----------
     book: ttk.Notebook
         変換条件を選ぶタブのウィジェット
-    combo_depth: ttk.Combobox
+    combo_level: ttk.Combobox
         階層条件を指定するプルダウンメニュー
     entry_word: tk.Entry
         レイヤーの名前の条件になる文字列を入れる入力フォーム
@@ -212,13 +240,13 @@ class CtrlFrame(ttk.Frame):
         '''
         条件指定で変換するモードのタブに置くフレームを生成
         ラベル、プルダウンメニュー、入力フォームなどを次々と置いていく
-        combo_depthだけはpsdファイルが読み込まれた後に中身を入れる(最大階層がわからないため)
+        combo_levelだけはpsdファイルが読み込まれた後に中身を入れる(最大階層がわからないため)
         '''
         frame_tmp = ttk.Frame(self)
 
         column = 1
-        self.combo_depth = ttk.Combobox(frame_tmp, state='readonly', width=18)
-        self.combo_depth.grid(row=0, column=column, pady=6)
+        self.combo_level = ttk.Combobox(frame_tmp, state='readonly', width=18)
+        self.combo_level.grid(row=0, column=column, pady=6)
 
         column += 1
         label_tmp = ttk.Label(frame_tmp, text='層にある、')
@@ -294,7 +322,7 @@ class CtrlFrame(ttk.Frame):
 
         Returns
         -------
-        c_depth: int
+        c_level: int
             階層
         c_words: str
             入力フォームの文字列
@@ -303,23 +331,23 @@ class CtrlFrame(ttk.Frame):
         c_class: int
             対象の種類。0: 物、1: レイヤー、2: グループ、3: グループ直下の物
         '''
-        c_depth = self.combo_depth.current()
+        c_level = self.combo_level.current()
         c_words = self.entry_word.get()
         c_match = self.combo_match.current()  # 0: include, 1: same
         c_class = self.combo_class.current()  # 0: both, 1: layer, 2: group, 3: things under the layer
-        return c_depth, c_words, c_match, c_class  # int, str, int, int
+        return c_level, c_words, c_match, c_class  # int, str, int, int
 
-    def set_combo_depth(self, values):
+    def set_combo_level(self, values):
         '''
         階層プルダウンメニューに値を設定する
 
         Parameters
         ----------
         values: list
-            階層(整数)のリスト。0 ~ psdファイルのdepth_max
+            階層(整数)のリスト。0 ~ psdファイルのlevel_max
         '''
-        self.combo_depth.config(values = values)
-        self.combo_depth.current(0)
+        self.combo_level.config(values = values)
+        self.combo_level.current(0)
         return self
 
 
@@ -448,6 +476,34 @@ class Anm_Frame(ttk.Frame):
         return self.entry_anmtail.get()
 
 
+class ToggleFrame(ttk.Frame):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.bool_packed = False
+
+    def pack(self, *args, anchor='w', **kwargs):
+        if self.bool_packed:
+            return None
+        super().pack(*args, anchor=anchor, **kwargs)
+        self.bool_packed = True
+        return None
+
+    def pack_forget(self, *args, **kwargs):
+        if not self.bool_packed:
+            return None
+        super().pack_forget(*args, **kwargs)
+        self.bool_packed = False
+        return None
+
+    def toggle(self, event=None):
+        if self.bool_packed:
+            self.pack_forget()
+        else:
+            self.pack()
+        return 'break'
+
+
 class LayerFrame(ttk.Frame):
     '''
     レイヤー構造表示領域においてレイヤーごとに生成されるフレーム
@@ -481,11 +537,11 @@ class LayerFrame(ttk.Frame):
         subframe: 下位レイヤーを配置するフレーム
     '''
 
-    def __init__(self, master, layer, depth, **kwargs):
+    def __init__(self, master, layer, **kwargs):
         '''
         レイヤーオブジェクトと階層を受け取ってウィジェットを生成する
-        depth=0、すなわちpsdファイル自身は表示内容が特別であるため(枝分かれ記号を表示しないとか)
-        if depth文を多用している。もっとスマートにできないものか
+        level=0、すなわちpsdファイル自身は表示内容が特別であるため(枝分かれ記号を表示しないとか)
+        if level文を多用している。もっとスマートにできないものか
 
         各ウィジェットはdictでまとめるためメソッド内では全て_tmpつきのローカル変数になっている
 
@@ -495,14 +551,14 @@ class LayerFrame(ttk.Frame):
             ウィジェットを配置できるtkinterオブジェクト。Tk、Frame、Canvasなど
         layer: psd_tools.api.layers.Group / PixelLayer
             レイヤー
-        depth: int
+        level: int
             レイヤーの階層
         '''
         super().__init__(master, **kwargs)
 
         frame_tmp = ttk.Frame(self)
 
-        labelname = (str(depth) + ' ' * 4 * depth + '|-') if depth else '層'
+        labelname = (str(layer.level) + ' ' * 4 * layer.level + '|-') if layer.level else '層'
         label_tmp = ttk.Label(frame_tmp, text=labelname)
         label_tmp.grid(row=0, column=0)
 
@@ -513,9 +569,10 @@ class LayerFrame(ttk.Frame):
         check_tmp.grid(row=0, column=1)
 
         entry_tmp = tk.Entry(frame_tmp, width=12)
-        if depth:
+        if layer.level:
             entry_tmp.insert(0, layer.name)
             entry_tmp.config(state='readonly')
+            entry_tmp.bind('<Double-Button-1>', lambda event: pyperclip.copy('v1.' + layer.fullpath))
             entry_tmp.grid(row=0, column=2)
         else:
             ttk.Label(frame_tmp, text='レイヤー構造').grid(row=0, column=2)
@@ -526,15 +583,16 @@ class LayerFrame(ttk.Frame):
 
         if layer.is_group():
             button_tmp = tk.Button(frame_tmp, text='追加')
-            button_tmp.grid(row=0, column=3) if depth else None
+            button_tmp.grid(row=0, column=3) if layer.level else None
             self.dict['button'] = button_tmp
 
             folded_tmp = tk.BooleanVar()
             folded_tmp.set(False)
             self.dict['folded'] = folded_tmp
 
-            subframe_tmp = ttk.Frame(self, relief='groove', padding=1)
-            subframe_tmp.pack(anchor='w')
+            subframe_tmp = ToggleFrame(self, relief='groove', padding=1)
+            subframe_tmp.pack()
+            label_tmp.bind('<Button-1>', subframe_tmp.toggle)
             self.dict['subframe'] = subframe_tmp
 
 
@@ -587,11 +645,11 @@ class ShowFrame(ttk.Frame):
         self.dict_widgets = {}
         self.width = width
         self.height = height
-
+        
         self.canvas = tk.Canvas(self, width=width, height=height)
         self.frame_hierarchy = ttk.Frame(self.canvas)
 
-        self.set_canvas().make_scrolls()
+        self.set_canvas().make_scrolls().make_buttons()
 
     def set_canvas(self):
         '''
@@ -605,7 +663,7 @@ class ShowFrame(ttk.Frame):
         self.canvas.xview_moveto('0.0')
         self.canvas.yview_moveto('0.0')
 
-        self.canvas.grid(row=0, column=0)
+        self.canvas.grid(row=0, column=0, columnspan=2)
         return self
 
     def remake_canvas(self, psd):
@@ -625,7 +683,7 @@ class ShowFrame(ttk.Frame):
 
         self.canvas = tk.Canvas(self, width=self.width, height=self.height)
 
-        self.frame_hierarchy = self.make_widgets_recursive(self.canvas, psd, 0)
+        self.frame_hierarchy = self.make_widgets_recursive(self.canvas, psd)
         self.set_canvas().make_scrolls()
 
     def make_scrolls(self):
@@ -639,21 +697,28 @@ class ShowFrame(ttk.Frame):
         self.scroll_x.bind_all('<Shift-MouseWheel>', lambda event: self.canvas.xview_scroll(-1*event.delta//120, 'units'))
         self.scroll_y.bind_all('<MouseWheel>', lambda event: self.canvas.yview_scroll(-1*event.delta//120, 'units'))
 
-        self.scroll_x.grid(row=1, column=0, sticky='ew')
-        self.scroll_y.grid(row=0, column=1, sticky='ns')
+        self.scroll_x.grid(row=1, column=0, columnspan=2, sticky='ew')
+        self.scroll_y.grid(row=0, column=2, sticky='ns')
         return self
 
-    def make_widgets_recursive(self, master, layer=None, depth=0):
+    def make_buttons(self):
+        self.button_unfold = tk.Button(self, text='全て展開')
+        self.button_fold = tk.Button(self, text='全て畳む')
+        self.button_unfold.grid(row=2, column=0, padx=6, pady=6)
+        self.button_fold.grid(row=2, column=1, padx=6, pady=6)
+        return self
+
+    def make_widgets_recursive(self, master, layer=None):
         '''
         レイヤーオブジェクトを受け取って再帰的にLayerFrameのインスタンスを作るメソッド
         layerがNoneの場合の処理はコンストラクタで使うために定義したけど特に意味がなかった模様
         基本的にはlayer=psdファイルオブジェクトを渡して全レイヤー構造を表示させるために使う
 
         動き:
-        渡されたlayerとdepthからLayerFrameを生成し、そのdictをdict_widgetsに追加
+        渡されたlayerとlevelからLayerFrameを生成し、そのdictをdict_widgetsに追加
         生成したLayerFrameをpackしたあと、もしlayerがグループであればその下位レイヤーをを
         引数としてmake_widgets_recursiveを実行し、返還されるフレームをpackしていく
-        この時masterにはdict['subframe']を、depthには1増えたdepthを与える
+        この時masterにはdict['subframe']を、levelには1増えたlevelを与える
 
         Parameters
         ----------
@@ -661,7 +726,7 @@ class ShowFrame(ttk.Frame):
             ウィジェットを配置できるtkinterオブジェクト。Tk、Frame、Canvasなど
         layer: psd_tools.api.layers.Group / PixelLayer
             レイヤー
-        depth: int
+        level: int
             レイヤーの階層
 
         Returns
@@ -672,15 +737,274 @@ class ShowFrame(ttk.Frame):
         if not layer:
             return ttk.Frame(master)
         
-        frame_tmp = LayerFrame(master, layer, depth)
+        frame_tmp = LayerFrame(master, layer)
         self.dict_widgets[id(layer)] = frame_tmp.dict
         frame_tmp.pack(anchor='w')
 
         if layer.is_group():
             for sublayer in layer:
-                self.make_widgets_recursive(frame_tmp.dict['subframe'], sublayer, depth+1).pack(anchor='w')
+                self.make_widgets_recursive(frame_tmp.dict['subframe'], sublayer).pack()
 
         return frame_tmp
+
+
+class EntryFrameSimple(ttk.Frame):
+    '''
+    変換条件やボタンがあるフレーム
+    mp: 目パチ
+    kp: 口パク
+
+    Attributes
+    ----------
+    combo_level: ttk.Combobox
+        階層条件を指定するプルダウンメニュー
+    entry_word: tk.Entry
+        レイヤーの名前の条件になる文字列を入れる入力フォーム
+    combo_match: ttk.Combobox
+        レイヤーの名前と文字列が「一致するか」「包含関係か」を選ぶプルダウンメニュー
+    combo_class: ttk.Combobox
+        レイヤー、グループ、その両方、あるいはグループ直下のものを選ぶプルダウンメニュー
+    button_converts: list
+        tk.Buttonの配列。「!」をつける、「*」をつける、記号を消すボタン
+    
+    '''
+    def __init__(self, master=None, **kwargs):
+        '''
+        ウィジェット生成をいくつかのメソッドに小分けし
+        コンストラクタ内で実行している
+        self.bookはここで生成する
+        '''
+        super().__init__(master, **kwargs)
+        self.make_widgets()
+
+    def make_widgets(self):
+        annotation = ['開き', 'ほぼ開き', '半開き', 'ほぼ閉じ', '閉じ']
+        self.entry_path = []
+        self.button_clearline = []
+        for i in range(5):
+            self.entry_path.append(tk.Entry(self, width=48))
+
+            self.entry_path[i].bind('<Control-d>', self.make_func_clear_line(i))
+            self.entry_path[i].bind('<Control-a>', self.make_func_select_line(i))
+            self.entry_path[i].bind('<Shift-ISO_Left_Tab>', self.make_func_move_to(i, 5, 0))
+            self.entry_path[i].bind('<Tab>', self.make_func_move_to(i, 5, 1))
+
+            self.button_clearline.append(tk.Button(self, text='クリア', command=self.make_func_clear_line(i)))
+
+            ttk.Label(self, text=annotation[i]).grid(row=i, column=0, padx=6, pady=6)
+            self.entry_path[i].grid(row=i, column=1, padx=6, pady=6)
+            self.button_clearline[i].grid(row=i, column=2, padx=6, pady=6)
+        return self
+
+    def make_func_clear_line(self, i):
+        def func_clear_line(event=None):
+            self.entry_path[i].delete(0, 'end')
+            return 'break'
+        return func_clear_line
+
+    def make_func_select_line(self, i):
+        def func_select_line(event=None):
+            self.entry_path[i].select_range(0, 'end')
+            self.entry_path[i].icursor('end')
+            return 'break'
+        return func_select_line
+
+    def make_func_move_to(self, now, total, direction):
+        '''
+        direction: 1-next, 0-back
+        '''
+        if direction:
+            next_num = now+1 if now < total-1 else 0
+        else:
+            next_num = now-1 if now > 0 else total-1
+
+        def func_move_to_back(event=None):
+            self.entry_path[next_num].focus_set()
+            self.make_func_select_line(next_num)()
+            return 'break'
+
+        return func_move_to_back
+
+    def make_layer_blanket(self):
+        sep = ''
+        script = '{'
+        for i in range(4, -1, -1):
+            str_got = self.entry_path[i].get().strip()
+            if str_got:
+                script += f'{sep}"{str_got}"'
+                sep = ','
+        script += '}'
+        return script
+
+
+class EntryFrameAIUEO(EntryFrameSimple):
+
+    def make_widgets(self):
+        annotation = ['あ', 'い', 'う', 'え', 'お', 'ん']
+        self.entry_path = []
+        self.button_clearline = []
+        for i in range(6):
+            self.entry_path.append(tk.Entry(self, width=48))
+
+            self.entry_path[i].bind('<Control-d>', self.make_func_clear_line(i))
+            self.entry_path[i].bind('<Control-a>', self.make_func_select_line(i))
+            self.entry_path[i].bind('<Shift-ISO_Left_Tab>', self.make_func_move_to(i, 6, 0))
+            self.entry_path[i].bind('<Tab>', self.make_func_move_to(i, 6, 1))
+
+            self.button_clearline.append(tk.Button(self, text='クリア', command=self.make_func_clear_line(i)))
+
+            ttk.Label(self, text=annotation[i]).grid(row=i, column=0, padx=6, pady=6)
+            self.entry_path[i].grid(row=i, column=1, padx=6, pady=6)
+            self.button_clearline[i].grid(row=i, column=2, padx=6, pady=6)
+        return self
+
+    def make_layer_blanket(self):
+        chars = ['a', 'i', 'u', 'e', 'o', 'N']
+        sep = ''
+        script = '{'
+        for char, entry in zip(chars, self.entry_path):
+            str_got = entry.get().strip()
+            if str_got:
+                script += f'{sep}{char}="{str_got}"'
+                sep = ','
+        script += '}'
+        return script
+
+
+class TextFrame(ttk.Frame):
+    def __init__(self, master=None, **kwargs):
+        super().__init__(master, **kwargs)
+        self.make_widgets()
+        self.text.bind('<Double-Button-1>', self.copytext)
+
+    def make_widgets(self):
+        self.text = tk.Text(self, width=72, height=6, state='disabled')
+        self.text.grid(row=0, column=0, columnspan=3, padx=6, pady=6)
+
+        self.button_copytext = tk.Button(self, text='コピー', command=self.copytext)
+        self.button_copytext.grid(row=1, column=0, padx=6, pady=6)
+
+        self.button_del1line = tk.Button(self, text='1行削除', command=self.del1line_text)
+        self.button_del1line.grid(row=1, column=1, padx=6, pady=6)
+
+        self.button_cleartext = tk.Button(self, text='クリア', command=self.clear_text)
+        self.button_cleartext.grid(row=1, column=2, padx=6, pady=6)
+        return self
+
+    def copytext(self, event=None):
+        content = self.text.get('1.0', 'end-1c')
+        pyperclip.copy(content)
+        return 'break'
+
+    def del1line_text(self, event=None):
+        self.text.config(state='normal')
+        self.text.delete('end-2l', 'end-1c')
+        self.text.config(state='disabled')
+        return 'break'
+        
+    def clear_text(self, event=None):
+        self.text.config(state='normal')
+        self.text.delete('1.0', 'end')
+        self.text.config(state='disabled')
+        return 'break'
+
+    def addline(self, line):
+        self.text.config(state='normal')
+        self.text.insert('end', line+'\n')
+        self.text.config(state='disabled')
+        return self
+
+
+class MPOptionFrame(ttk.Frame):
+
+    def __init__(self, master=None, **kwargs):
+        super().__init__(master, **kwargs)
+        self.make_widgets()
+
+    def make_widgets(self):
+        ttk.Label(self, text='間隔(秒)').grid(row=0, column=0, padx=6, pady=6)
+        ttk.Label(self, text='            速さ').grid(row=0, column=2, padx=6, pady=6)
+        ttk.Label(self, text='            オフセット').grid(row=0, column=4, padx=6, pady=6)
+
+        self.entry_option = []
+        options = [4, 1, 0]
+        for i in range(3):
+            self.entry_option.append(tk.Entry(self, width=3))
+            self.entry_option[i].grid(row=0, column=2*i+1, padx=6, pady=6)
+            self.entry_option[i].insert(0, str(options[i]))
+
+        return self
+
+    def get_option(self):
+        option = ''
+        for entry in self.entry_option:
+            option += ',' + entry.get().strip()
+        return option
+        
+
+class KPOptionFrame(ttk.Frame):
+
+    def __init__(self, master=None, **kwargs):
+        super().__init__(master, **kwargs)
+        self.make_widgets()
+
+    def make_widgets(self):
+        ttk.Label(self, text='子音処理').grid(row=0, column=0, padx=6, pady=6)
+        self.entry_consonant = tk.Entry(self, width=3)
+        self.entry_consonant.insert(0, '1')
+        self.entry_consonant.grid(row=0, column=1, padx=6, pady=6)
+        self.bool_option = tk.BooleanVar()
+        self.bool_option.set(True)
+        ttk.Label(self, text='                        ').grid(row=0, column=2, padx=2, pady=6)
+        tk.Checkbutton(self, variable=self.bool_option).grid(row=0, column=3, padx=2, pady=6)
+        ttk.Label(self, text='口パク準備がなくても有効').grid(row=0, column=4, padx=2, pady=6)
+
+        return self
+
+    def get_option(self):
+        option = f',{self.entry_consonant.get().strip()},{"true" if self.bool_option.get() else "false"}'
+        return option
+
+class ScriptBook(ttk.Notebook):
+
+    def __init__(self, master, *args, **kwargs):
+        super().__init__(master, *args, **kwargs)
+        self.make_tabs()
+
+    def make_tabs(self):
+        title = ['目パチ生成', '口パク生成', 'あいうえお口パク生成']
+
+        entryframe = [EntryFrameSimple, EntryFrameSimple, EntryFrameAIUEO]
+        optionframe = [MPOptionFrame, KPOptionFrame, KPOptionFrame]
+
+        self.frame_entry = []
+        self.frame_option = []
+        self.button_addline = []
+        self.frame_text = []
+
+        for i in range(3):
+            subframe = ttk.Frame(self)
+            ttk.Label(subframe, text=title[i]).pack(padx=6, pady=6, anchor='w')
+            self.frame_entry.append(entryframe[i](subframe))
+            self.frame_entry[i].pack(padx=6, pady=6)
+            self.frame_option.append(optionframe[i](subframe))
+            self.frame_option[i].pack(padx=6, pady=6)
+            self.button_addline.append(tk.Button(subframe, text='行生成', width=24, command = self.make_func_addline(i)))
+            self.button_addline[i].pack(padx=6, pady=6)
+            self.frame_text.append(TextFrame(subframe))
+            self.frame_text[i].pack(padx=6, pady=6)
+
+            self.add(subframe, text=12*' '+title[i]+12*' ')
+        return self
+
+    def make_func_addline(self, i):
+        option = ['Blinker', 'LipSyncSimple', 'LipSyncLab']
+        def func_addline(event=None):
+            script = f'require("PSDToolKit").{option[i]}'
+            script += f'.new({self.frame_entry[i].make_layer_blanket()}{self.frame_option[i].get_option()}),'
+            self.frame_text[i].addline(script)
+            return 'break'
+        return func_addline
 
 
 class HelpWindow(tk.Toplevel):
@@ -703,6 +1027,7 @@ class HelpWindow(tk.Toplevel):
         self.make_tab_check()
         self.make_tab_export()
         self.make_tab_hotkeys()
+        self.make_tab_script()
 
     def make_tab_file(self):
         frame_tmp = ttk.Frame(self.book)
@@ -734,6 +1059,12 @@ class HelpWindow(tk.Toplevel):
         self.book.add(frame_tmp, text='ショートカットキー')
         return self
 
+    def make_tab_script(self):
+        frame_tmp = ttk.Frame(self.book)
+        ttk.Label(frame_tmp, text=SCRIPTMSG, font=('', 10), anchor='w', justify='left').pack(padx=6, pady=6)
+        self.book.add(frame_tmp, text='目パチ口パク')
+        return self
+
 
 class RootWindow(tk.Tk):
     '''
@@ -758,7 +1089,7 @@ class RootWindow(tk.Tk):
         super().__init__(**kwargs)
         self.make_menu()
         self.make_widgets()
-        self.alias_obj()
+        self.alias_widgets()
         self.title('.psdファイルのレイヤーの名前の前に「!」や「*」を一括でつけるプログラム')
 
     def make_widgets(self):
@@ -769,15 +1100,23 @@ class RootWindow(tk.Tk):
         self.frame_file = FileFrame(frame_L)
         self.frame_file.pack(anchor='w')
 
-        ttk.Separator(frame_L, orient='horizontal').pack(fill='both', expand=True, pady=32)
+        # ttk.Separator(frame_L, orient='horizontal').pack(fill='both', expand=True, pady=32)
+        book_tmp = ttk.Notebook(frame_L)
+        book_tmp.pack()
 
-        self.frame_ctrl = CtrlFrame(frame_L)
+        frame_convert = ttk.Frame(book_tmp)
+
+        self.frame_ctrl = CtrlFrame(frame_convert)
         self.frame_ctrl.pack(anchor='w')
 
-        ttk.Separator(frame_L, orient='horizontal').pack(fill='both', expand=True, pady=32)
+        ttk.Separator(frame_convert, orient='horizontal').pack(fill='both', expand=True, pady=32)
 
-        self.frame__anm = Anm_Frame(frame_L)
+        self.frame__anm = Anm_Frame(frame_convert)
         self.frame__anm.pack(anchor='w')
+
+        book_tmp.add(frame_convert, text='レイヤー名変換')
+
+        book_tmp.add(ScriptBook(self), text='目パチ口パク生成')
 
         frame_L.grid(row=0, column=0, sticky='n', padx=12, pady=12)
         ttk.Separator(self, orient='vertical').grid(row=0, column=1, sticky='ns', padx=16)
@@ -786,7 +1125,7 @@ class RootWindow(tk.Tk):
         self.frame_show.grid(row=0, column=2, padx=12, pady=12)
         return self
 
-    def alias_obj(self):
+    def alias_widgets(self):
         '''
         下位フレームのインスタンスメソッドを自らのインスタンスメソッドとして定義する
         '''
@@ -796,7 +1135,7 @@ class RootWindow(tk.Tk):
 
         self.selected_tab = self.frame_ctrl.selected_tab
         self.select_tab = self.frame_ctrl.select_tab
-        self.set_combo_depth = self.frame_ctrl.set_combo_depth
+        self.set_combo_level = self.frame_ctrl.set_combo_level
         self.get_condition = self.frame_ctrl.get_condition
         self.button_converts = self.frame_ctrl.button_converts
 
@@ -807,6 +1146,9 @@ class RootWindow(tk.Tk):
         self.get_anmtail = self.frame__anm.get_anmtail
         self.button_clears = self.frame__anm.button_clears
         self.button_exports = self.frame__anm.button_exports
+
+        self.button_unfold = self.frame_show.button_unfold
+        self.button_fold = self.frame_show.button_fold
 
         return self
 
@@ -878,8 +1220,9 @@ class test():
 
 if __name__ == '__main__':
     root = RootWindow()
+    ScriptBook(root).grid(row=0, column=0)
     # ShowFrame(root).grid(row=0, column=1, rowspan=3)
     # FileFrame(root).grid(row=0, column=0)
     # CtrlFrame(root).grid(row=1, column=0)
     # Anm_Frame(root).grid(row=2, column=0)
-    # root.mainloop()
+    root.mainloop()

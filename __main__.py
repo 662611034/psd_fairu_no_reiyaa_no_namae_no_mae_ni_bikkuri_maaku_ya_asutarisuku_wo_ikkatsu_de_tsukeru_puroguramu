@@ -2,7 +2,7 @@
 .psdファイルのレイヤーの名前の前に「!」や「*」を一括でつけるプログラムのトップアプリケーション定義
 '''
 
-# import traceback
+import traceback
 import webbrowser
 import os
 import copy
@@ -223,15 +223,17 @@ class AppTop(gui.RootWindow):
                 func(event, *mode)
                 return 'break'
             except Exception as e:
-                mb.showerror('エラーが発生しました', str(e))
-                # mb.showerror('エラーが発生しました', str(traceback.format_exc()))
+                # mb.showerror('エラーが発生しました', str(e))
+                mb.showerror('エラーが発生しました', str(traceback.format_exc()))
 
         return f_callback
 
     def open_file(self, event):
         '''
-        ファイルを開く
-        開いた後ファイルパスとメッセージを表示させる
+        ファイルを開くコールバック
+        ファイルを開く動作の主体はsubfuncである
+        プログラムテストのときいちいちファイルダイアログが開かれると面倒なため
+        ファイル名指定部分は分離させた
 
         Parameters
         ----------
@@ -245,12 +247,9 @@ class AppTop(gui.RootWindow):
             raise Exception('.psdファイルではありません')  # .psdファイルでない場合エラー
         
         self.open_subfunc(ifile_path)
-        self.unre_state(0, 0).unre_state(1, 0)
-
         self.show_filename(self.ifile_path)
         self.show_msg('ファイルを開きました')
 
-        self.flag_saved = True  # 開いた直後は保存されたファイルと現在の表示状態が同じであるためTrue
         return self
 
     def save_file(self, event, mode):
@@ -287,11 +286,8 @@ class AppTop(gui.RootWindow):
             encoding = self.get_encode()
 
         self.save_subfunc(ofile_path, encoding)  # subfuncはこれが定義されている部分で説明
-
         self.show_filename(self.ifile_path)
         self.show_msg(msg)
-
-        self.flag_saved = True
         return self
 
     def export_script(self, event, mode):
@@ -384,8 +380,8 @@ class AppTop(gui.RootWindow):
         self.logger.stack_at(self.dict_names, 0)
         self.logger.reset(1)
 
-        for layer, depth in self.psd.all_layers():
-            if self.make_condition(layer, depth, self.selected_tab()):
+        for layer in self.psd.all_layers():
+            if self.make_condition(layer, self.selected_tab()):
                 self.convert_subfunc(layer, mode)
 
         self.unre_state(0, 1).unre_state(1, 0)
@@ -443,7 +439,7 @@ class AppTop(gui.RootWindow):
             mb.showwarning('ファイルがありません', 'まずはファイルを開いてください')
             return 'break'
 
-        for layer, _ in self.psd.all_layers():
+        for layer in self.psd.all_layers():
             self.frame_show.dict_widgets[id(layer)]['selected'].set(bool(mode))
         return self
 
@@ -478,10 +474,10 @@ class AppTop(gui.RootWindow):
 
         self.remake_frame_show()
 
-        self.set_combo_depth(list(range(self.psd.depth_max+1)))
+        self.set_combo_level(list(range(self.psd.level_max+1)))
 
         self.dict_names = {}
-        for layer, _ in self.psd.all_layers():
+        for layer in self.psd.all_layers():
             self.dict_names[id(layer)] = layer.name
 
         self.logger.reset(0).reset(1)
@@ -490,6 +486,10 @@ class AppTop(gui.RootWindow):
             self.menu_file.entryconfig(i, state='normal')
         for i in [0, 1, 2, 4, 5]:
             self.menu_edit.entryconfig(i, state='normal')
+
+        self.unre_state(0, 0).unre_state(1, 0)
+
+        self.flag_saved = True  # 開いた直後は保存されたファイルと現在の表示状態が同じであるためTrue
         return self
 
     def remake_frame_show(self):
@@ -508,50 +508,15 @@ class AppTop(gui.RootWindow):
         # だから領域の一番上のチェックボックスは別途bindを実行する必要がある
         self.frame_show.dict_widgets[id(self.psd)]['check'].bind('<Button-1>', self.make_fcheck(self.psd))
 
-        for layer, _ in self.psd.all_layers():
+        for layer in self.psd.all_layers():
             if layer.is_group():
                 dict_tmp = self.frame_show.dict_widgets[id(layer)]
                 dict_tmp['button'].config(command=self.make_callback(self.deal_anmlayer, 0, layer))
-                dict_tmp['label'].bind('<Button-1>', self.make_ffold(layer))
                 dict_tmp['check'].bind('<Button-1>', self.make_fcheck(layer))
 
         return self
 
     # make functions to bind at widgets on frame_show
-    def make_ffold(self, layer):
-        '''
-        引数のレイヤーグループの下位レイヤーの表示を折りたたんだり開いたりするコールバック関数を生成する
-
-        Parameters
-        ----------
-        layer: psd_tools.api.layers.group
-            対象レイヤー(グループ)
-
-        Returns
-        -------
-        ffold: function
-            折りたたんだり開いたりするメソッド
-            引数のレイヤーのメモリアドレスから、下位レイヤーの表示フレームとその状態を調べる
-            (dict_widgetsにすでに登録されている)
-            そして状態(dict_target['folded'])によってpackしたりpack_forgetした後状態の真理値を逆の値にする
-        '''
-
-        def ffold(event=None):
-            try:
-                dict_target = self.frame_show.dict_widgets[id(layer)]
-                flag = dict_target['folded'].get()
-                if flag:
-                    dict_target['subframe'].pack()
-                else:
-                    dict_target['subframe'].pack_forget()
-                dict_target['folded'].set(not flag)
-                return 'break'
-
-            except Exception as e:
-                mb.showerror('エラーが発生しました', str(e))
-
-        return ffold
-
     def make_fcheck(self, layer):
         '''
         shift+clickやctrl+shift+clickで一括チェックを入れるコールバック関数を生成
@@ -587,9 +552,9 @@ class AppTop(gui.RootWindow):
         ・上位レイヤーにチェックが入る
         ようになる。この時下位レイヤーはチェックを外すようにしたいため、Falseを反転せずそのまま適用する
         '''
-        dict_range = {8: [], \
-                9: [id(sublayer) for sublayer in layer], \
-                13 : [id(sublayer) for sublayer, _ in self.psd.sublayers_recursive(layer)]}
+        dict_range = {16: [], \
+                17: [id(sublayer) for sublayer in layer], \
+                21 : [id(sublayer) for sublayer, _ in self.psd.sublayers_recursive(layer)]}
         id_tmp = id(layer)
 
         def fcheck(event=None):
@@ -620,12 +585,15 @@ class AppTop(gui.RootWindow):
         encoding: str
             保存するとき使う文字コード
         '''
-        for layer, _ in self.psd.all_layers():
+        for layer in self.psd.all_layers():
             layer.name = self.frame_show.dict_widgets[id(layer)]['entry'].get()
 
         self.psd.save(ofile_path, encoding)
+
+        self.flag_saved = True
         self.ifile_path = ofile_path
         self.psd.encoding = encoding
+
         return self
 
     def export_subfunc(self, efile_path):
@@ -692,7 +660,7 @@ class AppTop(gui.RootWindow):
         entry_target.config(state='readonly')
         return self
 
-    def make_condition(self, layer, depth, mode):
+    def make_condition(self, layer, mode):
         '''
         レイヤー名変換対象レイヤーか否かを判断しその真理値を返す
         modeの値によってチェックボックスで判断するか条件指定か選ぶ
@@ -701,14 +669,14 @@ class AppTop(gui.RootWindow):
         layerのメモリアドレスでdict_widgetsから該当するチェック状態の値を調べるだけ
 
         mode=1の場合
-        c_depth、c_words、c_match、c_classを取得する(詳細はgui.pyのCtrlFrame参照)
+        c_level、c_words、c_match、c_classを取得する(詳細はgui.pyのCtrlFrame参照)
         それぞれの値を元に条件を判定する
 
         Parameters
         ----------
         layer: psd_tools.api.layers.Group / PixelLayer
             判断したいレイヤー
-        depth: int
+        level: int
             レイヤーの階層
         mode: int
             判断をチェックでするかか条件指定でするか
@@ -725,7 +693,7 @@ class AppTop(gui.RootWindow):
             return self.frame_show.dict_widgets[id(layer)]['selected'].get()
 
         elif mode == 1:
-            c_depth, c_words, c_match, c_class = self.get_condition()
+            c_level, c_words, c_match, c_class = self.get_condition()
             condition = True
 
             # c_class=3は「直下の物」
@@ -735,10 +703,10 @@ class AppTop(gui.RootWindow):
             entry_target = self.frame_show.dict_widgets[id_layer]['entry']
 
             # これも、c_classだと親レイヤーの階層を見なきゃならないためその補正をかけてる
-            c_depth_target = c_depth + (1 if c_class == 3 else 0)
+            c_level_target = c_level + (1 if c_class == 3 else 0)
 
-            if c_depth > 0:  # c_depthが0なら階層条件がない
-                condition = condition and (c_depth_target == depth)
+            if c_level > 0:  # c_levelが0なら階層条件がない
+                condition = condition and (c_level_target == layer.level)
 
             # ここでは名称の条件を処理
             if c_match == 0:
@@ -759,7 +727,7 @@ class AppTop(gui.RootWindow):
         '''
         レイヤー名の一覧をself.dict_namesに保存するメソッド
         '''
-        for layer, _ in self.psd.all_layers():
+        for layer in self.psd.all_layers():
             self.dict_names[id(layer)] = self.frame_show.dict_widgets[id(layer)]['entry'].get()
         return self
 
@@ -767,7 +735,7 @@ class AppTop(gui.RootWindow):
         '''
         loggerから取り出した辞書を参考にレイヤー構造表示領域の表示内容を更新する
         '''
-        for layer, _ in self.psd.all_layers():
+        for layer in self.psd.all_layers():
             entry_target = self.frame_show.dict_widgets[id(layer)]['entry']
             entry_target.config(state='normal')
             entry_target.delete(0, 'end')
@@ -777,7 +745,8 @@ class AppTop(gui.RootWindow):
 
 
 root = AppTop()
-ifile_path = './sample.psd'
+ifile_path = '/home/user/Downloads/im5467479.psd'
+root.open_subfunc(ifile_path)
 # ifile_path = r'C:\Users\user\Pictures\sample.psd'
 # root.open_subfunc(ifile_path)
 root.mainloop()

@@ -11,7 +11,7 @@ class PSDImageExt(psd_tools.PSDImage):
 
     Attributes
     ----------
-    depth_max: int
+    level_max: int
         最大階層
     encoding: str
         ファイルの文字コード
@@ -41,26 +41,40 @@ class PSDImageExt(psd_tools.PSDImage):
             ファイルを開くときの文字コード
         '''
         psd = super(PSDImageExt, cls).open(filepath, encoding=encoding, **kwargs)
-        psd.depth_max = psd.find_depth_max()
         psd.encoding = encoding
+        psd.assign_layerinfo()
+
+        psd.fullpath = '/'
+        psd.level = 0
+        for layer in psd.all_layers():
+            layer.fullpath = psd.layer_fullpath(layer)
         return psd
 
-    def find_depth_max(self):
+    def assign_fullpath(self):
+        for layer in self.all_layers():
+            layer.fullpath = self.layer_fullpath(layer)
+        return self
+
+    def assign_layerinfo(self):
         '''
         最大階層を調べるメソッド
         all_layersを実行し、階層の最大値を調べる
 
         Returns
         -------
-        depth_max: int
+        level_max: int
         '''
-        depth_max = 0
-        for _, depth in self.all_layers():
-            if depth > depth_max:
-                depth_max = depth
-        return depth_max
 
-    def save(self, file_path, encoding=None, **kwargs):
+        self.level_max = 0
+
+        for layer, level in self.sublayers_recursive(self):
+            layer.level = level
+            layer.fullpath = self.layer_fullpath(layer)
+            if level > self.level_max:
+                self.level_max = level
+        return self
+
+    def save(self, file_path, *args, encoding=None, **kwargs):
         '''
         psdを保存するメソッド。親クラスのopenをオーバーライドする
         親クラスは文字コードを保存する機能がなく、指定がなければ既定のmacromanで実行される
@@ -72,27 +86,28 @@ class PSDImageExt(psd_tools.PSDImage):
         '''
         if encoding is None:
             encoding = self.encoding
+        self.assign_fullpath()
         super().save(file_path, encoding=encoding, **kwargs)
         return self
 
     @classmethod
-    def sublayers_recursive(cls, layer, depth=0):
+    def sublayers_recursive(cls, layer, level=0):
         '''
         引数として受け取ったレイヤーの下位レイヤーを深さ優先探索(合ってるよね？)で調べるジェネレータ
-        layerクラスにはdepthという属性がないため、手動で与える必要がある
+        layerクラスにはlevelという属性がないため、手動で与える必要がある
         
         Parameters
         ----------
         layer: psd_tools.api.layers.Group / PixelLayer
             レイヤーのインスタンス
-        depth: int
+        level: int
             layerの階層
 
         Retunrs
         -------
         sublayer, subsublayer: psd_tools.api.layers.Group / PixelLayer
             下位レイヤー
-        subdepth, subsubdepth: int
+        sublevel, subsublevel: int
             その階層
 
         Notes
@@ -102,10 +117,10 @@ class PSDImageExt(psd_tools.PSDImage):
         '''
         if layer.is_group():
             for sublayer in layer:
-                subdepth = depth + 1
-                yield sublayer, subdepth
-                for subsublayer, subsubdepth in cls.sublayers_recursive(sublayer, subdepth):
-                    yield subsublayer, subsubdepth
+                sublevel = level + 1
+                yield sublayer, sublevel
+                for subsublayer, subsublevel in cls.sublayers_recursive(sublayer, sublevel):
+                    yield subsublayer, subsublevel
     
     def all_layers(self):
         '''
@@ -115,7 +130,7 @@ class PSDImageExt(psd_tools.PSDImage):
         -------
         layer: psd_tools.api.layers.Group / PixelLayer
             psdファイルに属するレイヤーやグループ
-        depth: int
+        level: int
             階層
 
         Notes
@@ -124,8 +139,8 @@ class PSDImageExt(psd_tools.PSDImage):
         psdファイル自身は特にいじる理由がないのと、
         ほかのレイヤーやグループとは属性が異なるから取り扱いが色々とややこしいため
         '''
-        for layer, depth in self.sublayers_recursive(self):
-            yield layer, depth
+        for layer, _ in self.sublayers_recursive(self):
+            yield layer
 
     def export_layers(self):
         '''
@@ -138,9 +153,9 @@ class PSDImageExt(psd_tools.PSDImage):
             レイヤー構造を表した文字列
         '''
         content = ''
-        for layer, depth in self.all_layers():
-            content += str(depth) + ' ' * 2 * depth
-            if depth > 1:
+        for layer in self.all_layers():
+            content += str(layer.level) + ' ' * 2 * layer.level
+            if layer.level > 1:
                 content += '|-  '
             content += '[' + layer.name + ']\n'
         return content
@@ -210,6 +225,6 @@ class PSDImageExt(psd_tools.PSDImage):
 
 
 if __name__ == '__main__':
-    ifile = r'./sample.psd'
+    ifile = r'/home/user/Downloads/im5467479.psd'
     psd0 = PSDImageExt.open(ifile, encoding='sjis')
-    print(type(psd0[0][0][0]))
+    psd0.save(ifile)
