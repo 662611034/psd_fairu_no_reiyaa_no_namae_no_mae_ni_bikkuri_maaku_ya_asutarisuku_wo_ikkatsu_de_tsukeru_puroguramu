@@ -1220,5 +1220,4 @@ class test():
 
 if __name__ == '__main__':
     root = RootWindow()
-    # test
     root.mainloop()
