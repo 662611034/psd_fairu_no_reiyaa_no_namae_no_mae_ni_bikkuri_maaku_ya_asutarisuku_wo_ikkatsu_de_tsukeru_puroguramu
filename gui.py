@@ -1220,9 +1220,4 @@ class test():
 
 if __name__ == '__main__':
     root = RootWindow()
-    ScriptBook(root).grid(row=0, column=0)
-    # ShowFrame(root).grid(row=0, column=1, rowspan=3)
-    # FileFrame(root).grid(row=0, column=0)
-    # CtrlFrame(root).grid(row=1, column=0)
-    # Anm_Frame(root).grid(row=2, column=0)
     root.mainloop()
