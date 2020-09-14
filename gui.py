@@ -884,4 +884,3 @@ if __name__ == '__main__':
     # Anm_Frame(root).grid(row=2, column=0)
     # test()
     # root.mainloop()
-    print(test().func(2))
