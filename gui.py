@@ -702,10 +702,11 @@ class ShowFrame(ttk.Frame):
         return self
 
     def make_buttons(self):
-        self.button_unfold = tk.Button(self, text='全て展開')
-        self.button_fold = tk.Button(self, text='全て畳む')
-        self.button_unfold.grid(row=2, column=0, padx=6, pady=6)
-        self.button_fold.grid(row=2, column=1, padx=6, pady=6)
+        self.button_foldall = []
+        text = ['全て展開', '全て畳む']
+        for i in range(2):
+            self.button_foldall.append(tk.Button(self, text=text[i]))
+            self.button_foldall[i].grid(row=2, column=i, padx=6, pady=6)
         return self
 
     def make_widgets_recursive(self, master, layer=None):
@@ -1000,7 +1001,7 @@ class ScriptBook(ttk.Notebook):
     def make_func_addline(self, i):
         option = ['Blinker', 'LipSyncSimple', 'LipSyncLab']
         def func_addline(event=None):
-            script = f'require("PSDToolKit").{option[i]}'
+            script = f'  require("PSDToolKit").{option[i]}'
             script += f'.new({self.frame_entry[i].make_layer_blanket()}{self.frame_option[i].get_option()}),'
             self.frame_text[i].addline(script)
             return 'break'
@@ -1147,8 +1148,7 @@ class RootWindow(tk.Tk):
         self.button_clears = self.frame__anm.button_clears
         self.button_exports = self.frame__anm.button_exports
 
-        self.button_unfold = self.frame_show.button_unfold
-        self.button_fold = self.frame_show.button_fold
+        self.button_foldall = self.frame_show.button_foldall
 
         return self
 

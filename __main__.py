@@ -144,6 +144,8 @@ class AppTop(gui.RootWindow):
 
         f_sela = [self.make_callback(self.select_all, i) for i in range(2)]  # select all
 
+        f_fold = [self.make_callback(self.fold_all, i) for i in range(2)]
+
         self.menu_file.entryconfig(0, command=f_open)
         self.menu_file.entryconfig(1, command=f_save[0])
         self.menu_file.entryconfig(2, command=f_save[1])
@@ -166,6 +168,8 @@ class AppTop(gui.RootWindow):
             self.button_clears[i].config(command=f_clea[i])
         for i in range(2):
             self.button_exports[i].config(command=f_expo[i])
+        for i in range(2):
+            self.button_foldall[i].config(command=f_fold[i])
 
         self.bind_all('<Control-o>', f_open)
         self.bind_all('<Control-s>', f_save[0])
@@ -443,6 +447,12 @@ class AppTop(gui.RootWindow):
             self.frame_show.dict_widgets[id(layer)]['selected'].set(bool(mode))
         return self
 
+    def fold_all(self, event, mode):
+        for layer in self.psd.all_layers():
+            if layer.is_group():
+                target = self.frame_show.dict_widgets[id(layer)]['subframe']
+                target.pack_forget() if mode else target.pack()
+        return 'break'
 # to here, callback funcs
 
 # from here, funcs need for open
@@ -567,6 +577,7 @@ class AppTop(gui.RootWindow):
                 mb.showerror('エラーが発生しました', str(e))
 
         return fcheck
+
 # to here, funcs need for open
 
     def save_subfunc(self, ofile_path, encoding):
@@ -745,8 +756,6 @@ class AppTop(gui.RootWindow):
 
 
 root = AppTop()
-ifile_path = '/home/user/Downloads/im5467479.psd'
-root.open_subfunc(ifile_path)
-# ifile_path = r'C:\Users\user\Pictures\sample.psd'
+# ifile_path = '/home/user/Downloads/im5467479.psd'
 # root.open_subfunc(ifile_path)
 root.mainloop()
