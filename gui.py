@@ -787,7 +787,7 @@ class EntryFrameSimple(ttk.Frame):
 
             self.entry_path[i].bind('<Control-d>', self.make_func_clear_line(i))
             self.entry_path[i].bind('<Control-a>', self.make_func_select_line(i))
-            self.entry_path[i].bind('<Shift-ISO_Left_Tab>', self.make_func_move_to(i, 5, 0))
+            self.entry_path[i].bind('<Shift-Tab>', self.make_func_move_to(i, 5, 0))
             self.entry_path[i].bind('<Tab>', self.make_func_move_to(i, 5, 1))
 
             self.button_clearline.append(tk.Button(self, text='クリア', command=self.make_func_clear_line(i)))
@@ -849,7 +849,7 @@ class EntryFrameAIUEO(EntryFrameSimple):
 
             self.entry_path[i].bind('<Control-d>', self.make_func_clear_line(i))
             self.entry_path[i].bind('<Control-a>', self.make_func_select_line(i))
-            self.entry_path[i].bind('<Shift-ISO_Left_Tab>', self.make_func_move_to(i, 6, 0))
+            self.entry_path[i].bind('<Shift-Tab>', self.make_func_move_to(i, 6, 0))
             self.entry_path[i].bind('<Tab>', self.make_func_move_to(i, 6, 1))
 
             self.button_clearline.append(tk.Button(self, text='クリア', command=self.make_func_clear_line(i)))

@@ -562,9 +562,9 @@ class AppTop(gui.RootWindow):
         ・上位レイヤーにチェックが入る
         ようになる。この時下位レイヤーはチェックを外すようにしたいため、Falseを反転せずそのまま適用する
         '''
-        dict_range = {16: [], \
-                17: [id(sublayer) for sublayer in layer], \
-                21 : [id(sublayer) for sublayer, _ in self.psd.sublayers_recursive(layer)]}
+        dict_range = {8: [], \
+                9: [id(sublayer) for sublayer in layer], \
+                13 : [id(sublayer) for sublayer, _ in self.psd.sublayers_recursive(layer)]}
         id_tmp = id(layer)
 
         def fcheck(event=None):
