@@ -1,5 +1,5 @@
 # ダウンロード
-最新版は[こちら](https://drive.google.com/file/d/1ig9vFRNgkwyo1KVHxzOwVLjOg668jw-Y/view?usp=sharing)のリンクからダウンロードできます。容量が大きくて(84MBほど)githubにアップロードできませんでした。   
+最新版は[こちら](https://drive.google.com/file/d/1N4xCn3g-Hns69BhBDgUo-9fOdT6T_UpS/view?usp=sharing)のリンクからダウンロードできます。容量が大きくて(84MBほど)githubにアップロードできませんでした。   
 過去バージョンはアップデート履歴からダウンロードできます。
 
 # このプログラムについて
@@ -36,7 +36,7 @@
   - .exe形式だとアンチウイルスソフトによってダウンロードできない場合があるとのことなので.zip形式でアップロードしました
 - 2020.09.11
   - ~~目パチ口パクのスクリプト生成をちょっとだけ楽にする機能のベータ版を配布します~~元のプログラムと統合したため別配布はもうしません
-- 2020.09.15
+- [2020.09.15](https://drive.google.com/file/d/1N4xCn3g-Hns69BhBDgUo-9fOdT6T_UpS/view?usp=sharing)
   - 目パチと口パクスクリプト作成補助機能を追加しました
  
   
