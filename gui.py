@@ -990,7 +990,7 @@ class ScriptBook(ttk.Notebook):
             self.frame_entry[i].pack(padx=6, pady=6)
             self.frame_option.append(optionframe[i](subframe))
             self.frame_option[i].pack(padx=6, pady=6)
-            self.button_addline.append(tk.Button(subframe, text='行生成', width=24, command = self.make_func_addline(i)))
+            self.button_addline.append(tk.Button(subframe, text='行生成', width=24, command = self.make_func_addline()))
             self.button_addline[i].pack(padx=6, pady=6)
             self.frame_text.append(TextFrame(subframe))
             self.frame_text[i].pack(padx=6, pady=6)
@@ -998,9 +998,10 @@ class ScriptBook(ttk.Notebook):
             self.add(subframe, text=12*' '+title[i]+12*' ')
         return self
 
-    def make_func_addline(self, i):
+    def make_func_addline(self):
         option = ['Blinker', 'LipSyncSimple', 'LipSyncLab']
         def func_addline(event=None):
+            i = self.index(self.select())
             script = f'  require("PSDToolKit").{option[i]}'
             script += f'.new({self.frame_entry[i].make_layer_blanket()}{self.frame_option[i].get_option()}),'
             self.frame_text[i].addline(script)
