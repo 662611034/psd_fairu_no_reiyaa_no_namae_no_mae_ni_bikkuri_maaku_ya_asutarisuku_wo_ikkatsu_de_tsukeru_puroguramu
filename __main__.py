@@ -756,6 +756,4 @@ class AppTop(gui.RootWindow):
 
 
 root = AppTop()
-# ifile_path = '/home/user/Downloads/im5467479.psd'
-# root.open_subfunc(ifile_path)
 root.mainloop()

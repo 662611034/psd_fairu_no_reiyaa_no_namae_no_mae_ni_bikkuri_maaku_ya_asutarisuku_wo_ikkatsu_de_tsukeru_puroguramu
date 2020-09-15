@@ -879,7 +879,7 @@ class TextFrame(ttk.Frame):
         self.text.bind('<Double-Button-1>', self.copytext)
 
     def make_widgets(self):
-        self.text = tk.Text(self, width=72, height=6, state='disabled')
+        self.text = tk.Text(self, width=72, height=16, state='disabled')
         self.text.grid(row=0, column=0, columnspan=3, padx=6, pady=6)
 
         self.button_copytext = tk.Button(self, text='コピー', command=self.copytext)
@@ -1110,7 +1110,7 @@ class RootWindow(tk.Tk):
         self.frame_ctrl = CtrlFrame(frame_convert)
         self.frame_ctrl.pack(anchor='w')
 
-        ttk.Separator(frame_convert, orient='horizontal').pack(fill='both', expand=True, pady=32)
+        ttk.Separator(frame_convert, orient='horizontal').pack(fill='both', expand=False, pady=32)
 
         self.frame__anm = Anm_Frame(frame_convert)
         self.frame__anm.pack(anchor='w')
