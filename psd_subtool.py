@@ -182,7 +182,7 @@ class PSDImageExt(psd_tools.PSDImage):
         if type(layer._parent) is type(self) and not (layer._parent is self):
             raise Exception('The layer is not a part of the psd')
 
-        fullpath = layer.name + path
+        fullpath = (layer.name + path).replace(' ', '%20')
         if layer._parent is self:
             return fullpath
         else:
@@ -216,7 +216,7 @@ class PSDImageExt(psd_tools.PSDImage):
         trackline = f'--track{tracknum}:{layer.name},0,{len(layer)},0,1\n'
         valueline = 'local values = {\n'
         for sublayer in layer:
-            fullpath = self.layer_fullpath(sublayer).replace(' ', '%20')
+            fullpath = self.layer_fullpath(sublayer)
             valueline += f'  "v1.{fullpath}",\n'
         valueline += '}\n'
         valueline += f'PSD:addstate(values, obj.track{tracknum})\n'
