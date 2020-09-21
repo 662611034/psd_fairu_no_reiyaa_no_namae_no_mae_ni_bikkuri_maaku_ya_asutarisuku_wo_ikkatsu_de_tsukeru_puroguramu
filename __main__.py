@@ -14,6 +14,14 @@ import tkinter.messagebox as mb
 # githubページのURL
 URL = 'https://github.com/662611034/psd_fairu_no_reiyaa_no_namae_no_mae_ni_bikkuri_maaku_ya_asutarisuku_wo_ikkatsu_de_tsukeru_puroguramu'
 
+def prohibit_to_doublebyte(string):
+    prohibitted = ['\\', '/', ':', '*', '?', '"', '<', '>', '|']
+    alternative = ['￥', '／', '：', '＊', '？', '”', '＜', '＞', '｜']
+    string_mod = string
+    for p, a in zip(prohibitted, alternative):
+        string_mod = string_mod.replace(p, a)
+    return string_mod
+
 
 class Logger():
     '''
@@ -348,13 +356,15 @@ class AppTop(gui.RootWindow):
             return self
 
         index_savedir = self.ifile_path.rfind(os.sep)
-        dir_save = self.ifile_path[:index_savedir+1] + f'png_exported'
-        os.makedirs(dir_save, exist_ok=True)
+        dir_save_root = self.ifile_path[:index_savedir+1] + f'png_exported'
 
         for group in layergroups:
-            for layer in group:
-                image = layer.topil()
-                image.save(f'{dir_save}{os.sep}{layer.name}.png')
+            dir_save = f'{dir_save_root}{os.sep}{prohibit_to_doublebyte(group.name)}'
+            os.makedirs(dir_save, exist_ok=True)
+            for layer, _ in self.psd.sublayers_recursive(group):
+                if not layer.is_group():
+                    image = layer.topil()
+                    image.save(f'{dir_save}{os.sep}{prohibit_to_doublebyte(layer.name)}.png')
 
         self.show_msg('.pngファイルを出力しました')
 

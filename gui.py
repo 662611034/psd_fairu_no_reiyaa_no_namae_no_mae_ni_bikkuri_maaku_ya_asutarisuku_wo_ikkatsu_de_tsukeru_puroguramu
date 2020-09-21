@@ -71,6 +71,23 @@ EXPORTMSG='''
 　確認メッセージは表示されません
 '''
 
+
+PNGMSG = '''
+・.anmファイルへの出力対象に選ばれたグループの下層の全てレイヤーを.pngファイルとして出力します
+
+・グループでないレイヤーだけ出力されます
+
+・出力先は.psdファイルのあるフォルダに生成される「png_exported」フォルダ内に生成される、
+　指定したグループと同名のフォルダ内です
+
+・ファイル名は「レイヤー名.png」です
+
+・レイヤー名に含まれる禁止文字(\、/、:、*、?、"、<、>、|)は全て全角文字に置換されます
+
+・ファイル名が重複する場合上書きされます
+'''
+
+
 HOTKEYS = '''
 キーボードショートカット一覧
 
@@ -1028,6 +1045,7 @@ class HelpWindow(tk.Toplevel):
         self.make_tab_convert()
         self.make_tab_check()
         self.make_tab_export()
+        self.make_tab_pngsave()
         self.make_tab_hotkeys()
         self.make_tab_script()
 
@@ -1053,6 +1071,12 @@ class HelpWindow(tk.Toplevel):
         frame_tmp = ttk.Frame(self.book)
         ttk.Label(frame_tmp, text=EXPORTMSG, font=('', 10), anchor='w', justify='left').pack(padx=6, pady=6)
         self.book.add(frame_tmp, text='.anmの書き出し')
+        return self
+
+    def make_tab_pngsave(self):
+        frame_tmp = ttk.Frame(self.book)
+        ttk.Label(frame_tmp, text=PNGMSG, font=('', 10), anchor='w', justify='left').pack(padx=6, pady=6)
+        self.book.add(frame_tmp, text='.pngの出力')
         return self
 
     def make_tab_hotkeys(self):
