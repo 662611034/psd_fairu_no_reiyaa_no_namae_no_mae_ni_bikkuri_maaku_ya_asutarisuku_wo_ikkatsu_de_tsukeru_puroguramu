@@ -355,16 +355,16 @@ class AppTop(gui.RootWindow):
         if not layergroups:
             return self
 
-        index_savedir = self.ifile_path.rfind(os.sep)
+        index_savedir = self.ifile_path.rfind('/')
         dir_save_root = self.ifile_path[:index_savedir+1] + f'png_exported'
 
         for group in layergroups:
-            dir_save = f'{dir_save_root}{os.sep}{prohibit_to_doublebyte(group.name)}'
+            dir_save = f'{dir_save_root}/{prohibit_to_doublebyte(group.name)}'
             os.makedirs(dir_save, exist_ok=True)
             for layer, _ in self.psd.sublayers_recursive(group):
                 if not layer.is_group():
                     image = layer.topil()
-                    image.save(f'{dir_save}{os.sep}{prohibit_to_doublebyte(layer.name)}.png')
+                    image.save(f'{dir_save}/{prohibit_to_doublebyte(layer.name)}.png')
 
         self.show_msg('.pngファイルを出力しました')
 
