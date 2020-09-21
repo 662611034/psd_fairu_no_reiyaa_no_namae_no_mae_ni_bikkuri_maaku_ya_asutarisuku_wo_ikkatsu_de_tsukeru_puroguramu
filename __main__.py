@@ -170,6 +170,7 @@ class AppTop(gui.RootWindow):
             self.button_exports[i].config(command=f_expo[i])
         for i in range(2):
             self.button_foldall[i].config(command=f_fold[i])
+        self.button_exports[2].config(command=self.make_callback(self.export_pngs))
 
         self.bind_all('<Control-o>', f_open)
         self.bind_all('<Control-s>', f_save[0])
@@ -323,6 +324,39 @@ class AppTop(gui.RootWindow):
 
         self.export_subfunc(efile_path)
         self.show_msg('.anmファイルを出力しました')
+
+        return self
+
+    def export_pngs(self, event):
+        '''
+        .pngファイルを書き出す
+
+        Parameters
+        ----------
+        event: tk.Event
+            使われない
+        '''
+        if not self.psd:
+            mb.showwarning('ファイルがありません', 'まずはファイルを開いてください')
+            return 'break'
+
+        if not self.flag_saved:
+            self.save_file(None, 0)
+
+        layergroups = self.get_anmlayers()
+        if not layergroups:
+            return self
+
+        index_savedir = self.ifile_path.rfind(os.sep)
+        dir_save = self.ifile_path[:index_savedir+1] + f'png_exported'
+        os.makedirs(dir_save, exist_ok=True)
+
+        for group in layergroups:
+            for layer in group:
+                image = layer.topil()
+                image.save(f'{dir_save}{os.sep}{layer.name}.png')
+
+        self.show_msg('.pngファイルを出力しました')
 
         return self
 

@@ -409,8 +409,8 @@ class Anm_Frame(ttk.Frame):
         self.entry_anmtail.grid(row=1, column=1, padx=6, pady=6)
         
         self.button_exports = []
-        texts = ['既定の名前で書き出し', '名前を指定して書き出し']
-        for i in range(2):
+        texts = ['既定の名前で書き出し', '名前を指定して書き出し', '.png抽出（仮）']
+        for i in range(3):
             self.button_exports.append(tk.Button(subframe_tmp, text=texts[i], width=24))
             self.button_exports[i].grid(row=i+2, column=0, columnspan=2, padx=6, pady=6)
         subframe_tmp.grid(row=1, column=2, padx=6, pady=6)
