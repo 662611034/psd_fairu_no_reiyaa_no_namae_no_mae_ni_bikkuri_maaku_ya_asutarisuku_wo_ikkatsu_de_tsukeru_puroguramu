@@ -41,7 +41,7 @@
 - [2020.09.21](https://drive.google.com/file/d/1_F1Vqqie_UBKHRNkFBNMCXZobgjFKSkP/view?usp=sharing)
   - .png抽出機能（仮）を追加しました
 - [2020.09.29](https://drive.google.com/file/d/1lXuv_mEhp3UUJhaKZIHje-j0l1GCjdkI/view?usp=sharing)
-  - 一部特殊文字を含むレイヤーを.anmに出力するときエラーが発生する問題が修正されました(Istallia様)
+  - 一部特殊文字を含むレイヤーを.anmに出力するときエラーが発生する問題を修正していただきました(Istallia様)
  
   
 # 使い方
