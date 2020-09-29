@@ -336,7 +336,7 @@ class AppTop(gui.RootWindow):
 
         return self
 
-    def export_script_with_blinking(self, event):
+    def export_script_with_blinking(self, event, mode=0):
         '''
         .anmファイルを書き出す (目パチ口パク付き)
 
@@ -344,6 +344,9 @@ class AppTop(gui.RootWindow):
         ----------
         event: tk.Event
             使われない
+        mode: int
+            0: 既定の名前、1: 名前を指定
+            なお、現段階ではボタンが1つしかないため、初期値として仮に0を指定しています
         '''
         if not self.psd:
             mb.showwarning('ファイルがありません', 'まずはファイルを開いてください')
@@ -361,7 +364,7 @@ class AppTop(gui.RootWindow):
             if efile_path[-4:] != '.anm':
                 efile_path += '.anm'
 
-        self.export_subfunc(efile_path)
+        self.export_subfunc_with_blinking(efile_path)
         self.show_msg('.anmファイルを出力しました')
 
         return self
