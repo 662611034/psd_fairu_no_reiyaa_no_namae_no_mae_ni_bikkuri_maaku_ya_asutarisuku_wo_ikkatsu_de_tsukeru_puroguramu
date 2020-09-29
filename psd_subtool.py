@@ -182,8 +182,10 @@ class PSDImageExt(psd_tools.PSDImage):
         if type(layer._parent) is type(self) and not (layer._parent is self):
             raise Exception('The layer is not a part of the psd')
 
-        fullpath = (layer.name + path).replace(' ', '%20')
+        fullpath = layer.name + path
 
+        # 半角スペース( )問題に対する対処
+        fullpath = fullpath.replace(' ', '%20')
         # 全角チルダ(～)問題に対する対処
         fullpath = fullpath.replace(chr(0xff5e), chr(0x301c))
         # 全角マイナス(－)問題の対処
