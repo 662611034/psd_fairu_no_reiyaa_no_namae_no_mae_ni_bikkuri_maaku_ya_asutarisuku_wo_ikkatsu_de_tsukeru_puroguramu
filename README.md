@@ -1,5 +1,5 @@
 # ダウンロード
-最新版は[こちら](https://drive.google.com/file/d/1_F1Vqqie_UBKHRNkFBNMCXZobgjFKSkP/view?usp=sharing)のリンクからダウンロードできます。容量が大きくて(84MBほど)githubにアップロードできませんでした。   
+最新版は[こちら](https://drive.google.com/file/d/1lXuv_mEhp3UUJhaKZIHje-j0l1GCjdkI/view?usp=sharing)のリンクからダウンロードできます。容量が大きくて(84MBほど)githubにアップロードできませんでした。   
 過去バージョンはアップデート履歴からダウンロードできます。
 
 # このプログラムについて
@@ -40,6 +40,8 @@
   - 目パチと口パクスクリプト作成補助機能を追加しました
 - [2020.09.21](https://drive.google.com/file/d/1_F1Vqqie_UBKHRNkFBNMCXZobgjFKSkP/view?usp=sharing)
   - .png抽出機能（仮）を追加しました
+- [2020.09.29](https://drive.google.com/file/d/1lXuv_mEhp3UUJhaKZIHje-j0l1GCjdkI/view?usp=sharing)
+  - 一部特殊文字を含むレイヤーを.anmに出力するときエラーが発生する問題が修正されました(Istallia様)
  
   
 # 使い方
