@@ -336,6 +336,36 @@ class AppTop(gui.RootWindow):
 
         return self
 
+    def export_script_with_blinking(self, event):
+        '''
+        .anmファイルを書き出す (目パチ口パク付き)
+
+        Parameters
+        ----------
+        event: tk.Event
+            使われない
+        '''
+        if not self.psd:
+            mb.showwarning('ファイルがありません', 'まずはファイルを開いてください')
+            return 'break'
+
+        if not self.flag_saved:
+            self.save_file(None, 0)
+
+        if mode == 0:
+            efile_path = self.ifile_path[:-4] + self.get_anmtail() + '.anm'
+        elif mode == 1:
+            efile_path = fd.asksaveasfilename(filetypes=[('anm files', '*.anm')])
+            if not efile_path:
+                return 'break'
+            if efile_path[-4:] != '.anm':
+                efile_path += '.anm'
+
+        self.export_subfunc(efile_path)
+        self.show_msg('.anmファイルを出力しました')
+
+        return self
+
     def export_pngs(self, event):
         '''
         .pngファイルを書き出す
