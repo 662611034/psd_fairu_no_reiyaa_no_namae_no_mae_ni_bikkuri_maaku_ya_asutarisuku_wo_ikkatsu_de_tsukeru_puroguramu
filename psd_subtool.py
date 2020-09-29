@@ -221,6 +221,10 @@ class PSDImageExt(psd_tools.PSDImage):
         valueline += '}\n'
         valueline += f'PSD:addstate(values, obj.track{tracknum})\n'
 
+        # 全角チルダ(～)問題に対する対処
+        trackline = trackline.replace(chr(0xff5e), chr(0x301c))
+        valueline = valueline.replace(chr(0xff5e), chr(0x301c))
+
         return trackline, valueline
 
 
