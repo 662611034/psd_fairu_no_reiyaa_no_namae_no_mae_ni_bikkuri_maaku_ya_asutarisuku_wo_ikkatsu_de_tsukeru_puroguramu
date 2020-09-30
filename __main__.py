@@ -741,21 +741,45 @@ class AppTop(gui.RootWindow):
             trackline, valueline = self.psd.export_anmscript(layer, tracknum)
             if tracknum == track_lipsync_aiueo:
                 script_text = root.script_book.get_script_text(2)
-                print('text: '+script_text)
+                position    = self.calc_insert_valueline_position(valueline, tracknum)
+                valueline   = valueline[:position] + script_text + valueline[position:]
+                trackline   = self.change_layer_num_in_trackline(trackline, script_text)
             if tracknum == track_lipsync_oc:
                 script_text = root.script_book.get_script_text(1)
-                print('text: '+script_text)
+                position    = self.calc_insert_valueline_position(valueline, tracknum)
+                valueline   = valueline[:position] + script_text + valueline[position:]
+                trackline   = self.change_layer_num_in_trackline(trackline, script_text)
             if tracknum == track_blink_eye:
                 script_text = root.script_book.get_script_text(0)
-                print('text: '+script_text)
+                position    = self.calc_insert_valueline_position(valueline, tracknum)
+                valueline   = valueline[:position] + script_text + valueline[position:]
+                trackline   = self.change_layer_num_in_trackline(trackline, script_text)
             tracklines += trackline
             valuelines += '\n' + valueline
 
-        # with open(efile_path, mode='w', encoding='sjis') as fout:  # or cp932
-        #     fout.write(tracklines)
-        #     fout.write(valuelines)
+        with open(efile_path, mode='w', encoding='sjis') as fout:  # or cp932
+            fout.write(tracklines)
+            fout.write(valuelines)
 
         return self
+
+    def calc_insert_valueline_position(self, valueline, track_num):
+        pos = 0
+        for i in range(track_num+1):
+            pos = valueline.find('local values', pos) + 12
+        pos = valueline.find('\n', pos) + 1
+        return pos
+
+    def change_layer_num_in_trackline(self, trackline, script_text):
+        if len(script_text) < 1:
+            return trackline
+        delta_num = script_text.count('PSDToolKit')
+        pos       = trackline.find('0,') + 2
+        layer_num = ''
+        while trackline[pos].isdecimal():
+            layer_num = layer_num + trackline[pos]
+            pos += 1
+        return trackline.replace(layer_num+',', str(int(layer_num)+delta_num)+',')
 
 # from here, funcs need for conversion
     def convert_subfunc(self, layer, mode):
