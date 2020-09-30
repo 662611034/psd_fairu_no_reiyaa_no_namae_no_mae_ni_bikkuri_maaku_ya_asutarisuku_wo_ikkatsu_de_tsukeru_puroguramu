@@ -734,11 +734,20 @@ class AppTop(gui.RootWindow):
         dialog = gui.TrackNumberDialog(master=self)
         dialog.wait_window()
         track_blink_eye, track_lipsync_oc, track_lipsync_aiueo = dialog.getTracksNumber()
-        print(track_blink_eye, track_lipsync_oc, track_lipsync_aiueo)
+        # print(track_blink_eye, track_lipsync_oc, track_lipsync_aiueo)
 
         tracklines, valuelines = '', ''
         for tracknum, layer in enumerate(anmlayers):
             trackline, valueline = self.psd.export_anmscript(layer, tracknum)
+            if tracknum == track_lipsync_aiueo:
+                script_text = root.script_book.get_script_text(2)
+                print('text: '+script_text)
+            if tracknum == track_lipsync_oc:
+                script_text = root.script_book.get_script_text(1)
+                print('text: '+script_text)
+            if tracknum == track_blink_eye:
+                script_text = root.script_book.get_script_text(0)
+                print('text: '+script_text)
             tracklines += trackline
             valuelines += '\n' + valueline
 

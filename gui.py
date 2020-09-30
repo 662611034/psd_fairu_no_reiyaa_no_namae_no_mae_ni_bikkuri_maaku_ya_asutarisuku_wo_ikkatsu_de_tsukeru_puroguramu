@@ -914,6 +914,10 @@ class TextFrame(ttk.Frame):
         pyperclip.copy(content)
         return 'break'
 
+    def gettext(self, event=None):
+        content = self.text.get('1.0', 'end-1c')
+        return content
+
     def del1line_text(self, event=None):
         self.text.config(state='normal')
         self.text.delete('end-2l', 'end-1c')
@@ -1024,6 +1028,9 @@ class ScriptBook(ttk.Notebook):
             self.frame_text[i].addline(script)
             return 'break'
         return func_addline
+
+    def get_script_text(self, i):
+        return self.frame_text[i].gettext()
 
 
 class TrackNumberDialog(tk.Toplevel):
@@ -1192,6 +1199,8 @@ class RootWindow(tk.Tk):
         .anmファイル書き出し関連ウィジェットが配置されたフレーム
     frame_show: ShowFrame
         レイヤー構造表示領域のフレーム
+    script_book: ScriptBook
+        スクリプト保管用のBook(?) スクリプトをコードから取得するために保管
     '''
 
     def __init__(self, **kwargs):
@@ -1228,7 +1237,8 @@ class RootWindow(tk.Tk):
 
         book_tmp.add(frame_convert, text='レイヤー名変換')
 
-        book_tmp.add(ScriptBook(self), text='目パチ口パク生成')
+        self.script_book = ScriptBook(self)
+        book_tmp.add(self.script_book, text='目パチ口パク生成')
 
         frame_L.grid(row=0, column=0, sticky='n', padx=12, pady=12)
         ttk.Separator(self, orient='vertical').grid(row=0, column=1, sticky='ns', padx=16)
