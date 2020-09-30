@@ -731,15 +731,20 @@ class AppTop(gui.RootWindow):
         if not anmlayers:
             return self
 
+        dialog = gui.TrackNumberDialog(master=self)
+        dialog.wait_window()
+        track_blink_eye, track_lipsync_oc, track_lipsync_aiueo = dialog.getTracksNumber()
+        print(track_blink_eye, track_lipsync_oc, track_lipsync_aiueo)
+
         tracklines, valuelines = '', ''
         for tracknum, layer in enumerate(anmlayers):
             trackline, valueline = self.psd.export_anmscript(layer, tracknum)
             tracklines += trackline
             valuelines += '\n' + valueline
 
-        with open(efile_path, mode='w', encoding='sjis') as fout:  # or cp932
-            fout.write(tracklines)
-            fout.write(valuelines)
+        # with open(efile_path, mode='w', encoding='sjis') as fout:  # or cp932
+        #     fout.write(tracklines)
+        #     fout.write(valuelines)
 
         return self
 

@@ -1026,6 +1026,92 @@ class ScriptBook(ttk.Notebook):
         return func_addline
 
 
+class TrackNumberDialog(tk.Toplevel):
+    '''
+    スクリプトをどのトラックに挿入するかを指定するダイアログ
+    anmファイルを目パチ口パクスクリプトと組み合わせた状態で出力する場合に呼び出される
+
+    Attributes
+    ----------
+    track_blink_eye: int
+        目パチスクリプトの挿入先トラック。挿入しない場合は-1
+    track_lipsync_oc: int
+        口パク(開閉のみ)スクリプトの挿入先トラック。挿入しない場合は-1
+    track_lipsync_aiueo: int
+        口パク(あいうえお)スクリプトの挿入先トラック。挿入しない場合は-1
+    is_ok: bool
+        「書き出す」ボタンが押された状態で終了したか
+    entry_track_blink_eye: tk.Entry
+        目パチのトラック番号の入力フォーム
+    entry_track_lipsync_oc: tk.Entry
+        口パク(開閉のみ)のトラック番号の入力フォーム
+    entry_track_lipsync_aiueo: tk.Entry
+        口パク(あいうえお)のトラック番号の入力フォーム
+    '''
+    def __init__(self, master=None, **kwargs):
+        # super(TrackNumberDialog, self).__init__()
+        super().__init__(master, **kwargs)
+        self.track_blink_eye     = -1
+        self.track_lipsync_oc    = -1
+        self.track_lipsync_aiueo = -1
+        self.is_ok               = False
+        self.make_forms()
+        self.make_buttons()
+        self.wm_attributes('-topmost', 1)
+        self.protocol('WM_DELETE_WINDOW', self.destroy)
+        self.grab_set()
+
+    def make_forms(self):
+        frame_tmp = ttk.Frame(self)
+        row = 1
+        label_tmp = ttk.Label(frame_tmp, text='スクリプトを挿入するトラック番号を0～3で入力してください')
+        label_tmp.grid(row=row, column=0, columnspan=2, pady=6)
+        row += 1
+        label_tmp = ttk.Label(frame_tmp, text='目パチ')
+        label_tmp.grid(row=row, column=0, pady=6)
+        self.entry_track_blink_eye = tk.Entry(frame_tmp, width=12)
+        self.entry_track_blink_eye.grid(row=row, column=1, pady=6)
+        self.entry_track_blink_eye.focus_set()
+        row += 1
+        label_tmp = ttk.Label(frame_tmp, text='口パク(開閉のみ)')
+        label_tmp.grid(row=row, column=0, pady=6)
+        self.entry_track_lipsync_oc = tk.Entry(frame_tmp, width=12)
+        self.entry_track_lipsync_oc.grid(row=row, column=1, pady=6)
+        self.entry_track_lipsync_oc.focus_set()
+        row += 1
+        label_tmp = ttk.Label(frame_tmp, text='口パク(あいうえお)')
+        label_tmp.grid(row=row, column=0, pady=6)
+        self.entry_track_lipsync_aiueo = tk.Entry(frame_tmp, width=12)
+        self.entry_track_lipsync_aiueo.grid(row=row, column=1, pady=6)
+        self.entry_track_lipsync_aiueo.focus_set()
+        frame_tmp.pack(padx=6, pady=6)
+        return self
+
+    def make_buttons(self):
+        frame_tmp  = ttk.Frame(self)
+        button_tmp = tk.Button(frame_tmp, text="書き出す", command=self.close_dialog)
+        button_tmp.pack()
+        frame_tmp.pack()
+        return self
+
+    def close_dialog(self):
+        str_track_blink_eye     = self.entry_track_blink_eye.get()
+        str_track_lipsync_oc    = self.entry_track_lipsync_oc.get()
+        str_track_lipsync_aiueo = self.entry_track_lipsync_aiueo.get()
+        if str_track_blink_eye.isdecimal() and int(str_track_blink_eye) >= 0 and int(str_track_blink_eye) <= 3:
+            self.track_blink_eye = int(str_track_blink_eye)
+        if str_track_lipsync_oc.isdecimal() and int(str_track_lipsync_oc) >= 0 and int(str_track_lipsync_oc) <= 3:
+            self.track_lipsync_oc = int(str_track_lipsync_oc)
+        if str_track_lipsync_aiueo.isdecimal() and int(str_track_lipsync_aiueo) >= 0 and int(str_track_lipsync_aiueo) <= 3:
+            self.track_lipsync_aiueo = int(str_track_lipsync_aiueo)
+        self.is_ok = True
+        self.destroy()
+        return self
+
+    def getTracksNumber(self):
+        return self.track_blink_eye, self.track_lipsync_oc, self.track_lipsync_aiueo
+
+
 class HelpWindow(tk.Toplevel):
     '''
     Helpを押したとき表示されるウィンドウ
