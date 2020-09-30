@@ -717,6 +717,32 @@ class AppTop(gui.RootWindow):
 
         return self
 
+    def export_subfunc_with_blinking(self, efile_path):
+        '''
+        .anmファイル(目パチ口パクあり)書き出しの内部処理
+        上の関数とほぼ同じなので説明は省略
+
+        Parameters
+        ----------
+        efile_path: str
+            書き出す.anmファイルのパス
+        '''
+        anmlayers = self.get_anmlayers()
+        if not anmlayers:
+            return self
+
+        tracklines, valuelines = '', ''
+        for tracknum, layer in enumerate(anmlayers):
+            trackline, valueline = self.psd.export_anmscript(layer, tracknum)
+            tracklines += trackline
+            valuelines += '\n' + valueline
+
+        with open(efile_path, mode='w', encoding='sjis') as fout:  # or cp932
+            fout.write(tracklines)
+            fout.write(valuelines)
+
+        return self
+
 # from here, funcs need for conversion
     def convert_subfunc(self, layer, mode):
         '''
