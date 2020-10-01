@@ -179,7 +179,8 @@ class AppTop(gui.RootWindow):
         for i in range(2):
             self.button_foldall[i].config(command=f_fold[i])
         self.button_exports[2].config(command=self.make_callback(self.export_pngs))
-        self.button_exports[3].config(command=self.make_callback(self.export_script_with_blinking))
+        self.button_exports[3].config(command=self.make_callback(self.export_script_with_blinking, 0))
+        self.button_exports[4].config(command=self.make_callback(self.export_script_with_blinking, 1))
 
         self.bind_all('<Control-o>', f_open)
         self.bind_all('<Control-s>', f_save[0])
