@@ -1071,7 +1071,7 @@ class TrackNumberDialog(tk.Toplevel):
     def make_forms(self):
         frame_tmp = ttk.Frame(self)
         row = 1
-        label_tmp = ttk.Label(frame_tmp, text='スクリプトを挿入するトラック番号を0～3で入力してください')
+        label_tmp = ttk.Label(frame_tmp, text='スクリプトを挿入するトラック番号を0～3で入力してください\n(空白ならそのスクリプトは挿入しません)')
         label_tmp.grid(row=row, column=0, columnspan=2, pady=6)
         row += 1
         label_tmp = ttk.Label(frame_tmp, text='目パチ')
@@ -1091,14 +1091,14 @@ class TrackNumberDialog(tk.Toplevel):
         self.entry_track_lipsync_aiueo = tk.Entry(frame_tmp, width=12)
         self.entry_track_lipsync_aiueo.grid(row=row, column=1, pady=6)
         self.entry_track_lipsync_aiueo.focus_set()
-        frame_tmp.pack(padx=6, pady=6)
+        frame_tmp.pack(padx=6, pady=4)
         return self
 
     def make_buttons(self):
         frame_tmp  = ttk.Frame(self)
         button_tmp = tk.Button(frame_tmp, text="書き出す", command=self.close_dialog)
         button_tmp.pack()
-        frame_tmp.pack()
+        frame_tmp.pack(padx=6, pady=4)
         return self
 
     def close_dialog(self):
