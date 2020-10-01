@@ -364,8 +364,11 @@ class AppTop(gui.RootWindow):
             if efile_path[-4:] != '.anm':
                 efile_path += '.anm'
 
-        self.export_subfunc_with_blinking(efile_path)
-        self.show_msg('.anmファイルを出力しました')
+        tmp, is_ok = self.export_subfunc_with_blinking(efile_path)
+        if is_ok:
+            self.show_msg('.anmファイルを出力しました')
+        else:
+            self.show_msg('.anmファイルの出力を中断しました')
 
         return self
 
@@ -736,32 +739,34 @@ class AppTop(gui.RootWindow):
         track_blink_eye, track_lipsync_oc, track_lipsync_aiueo = dialog.getTracksNumber()
         # print(track_blink_eye, track_lipsync_oc, track_lipsync_aiueo)
 
-        tracklines, valuelines = '', ''
-        for tracknum, layer in enumerate(anmlayers):
-            trackline, valueline = self.psd.export_anmscript(layer, tracknum)
-            if tracknum == track_lipsync_aiueo:
-                script_text = root.script_book.get_script_text(2)
-                position    = self.calc_insert_valueline_position(valueline, tracknum)
-                valueline   = valueline[:position] + script_text + valueline[position:]
-                trackline   = self.change_layer_num_in_trackline(trackline, script_text)
-            if tracknum == track_lipsync_oc:
-                script_text = root.script_book.get_script_text(1)
-                position    = self.calc_insert_valueline_position(valueline, tracknum)
-                valueline   = valueline[:position] + script_text + valueline[position:]
-                trackline   = self.change_layer_num_in_trackline(trackline, script_text)
-            if tracknum == track_blink_eye:
-                script_text = root.script_book.get_script_text(0)
-                position    = self.calc_insert_valueline_position(valueline, tracknum)
-                valueline   = valueline[:position] + script_text + valueline[position:]
-                trackline   = self.change_layer_num_in_trackline(trackline, script_text)
-            tracklines += trackline
-            valuelines += '\n' + valueline
+        # 「書き出す」ボタンが押された場合にのみ保存する
+        if dialog.is_ok:
+            tracklines, valuelines = '', ''
+            for tracknum, layer in enumerate(anmlayers):
+                trackline, valueline = self.psd.export_anmscript(layer, tracknum)
+                if tracknum == track_lipsync_aiueo:
+                    script_text = root.script_book.get_script_text(2)
+                    position    = self.calc_insert_valueline_position(valueline, tracknum)
+                    valueline   = valueline[:position] + script_text + valueline[position:]
+                    trackline   = self.change_layer_num_in_trackline(trackline, script_text)
+                if tracknum == track_lipsync_oc:
+                    script_text = root.script_book.get_script_text(1)
+                    position    = self.calc_insert_valueline_position(valueline, tracknum)
+                    valueline   = valueline[:position] + script_text + valueline[position:]
+                    trackline   = self.change_layer_num_in_trackline(trackline, script_text)
+                if tracknum == track_blink_eye:
+                    script_text = root.script_book.get_script_text(0)
+                    position    = self.calc_insert_valueline_position(valueline, tracknum)
+                    valueline   = valueline[:position] + script_text + valueline[position:]
+                    trackline   = self.change_layer_num_in_trackline(trackline, script_text)
+                tracklines += trackline
+                valuelines += '\n' + valueline
 
-        with open(efile_path, mode='w', encoding='sjis') as fout:  # or cp932
-            fout.write(tracklines)
-            fout.write(valuelines)
+            with open(efile_path, mode='w', encoding='sjis') as fout:  # or cp932
+                fout.write(tracklines)
+                fout.write(valuelines)
 
-        return self
+        return self, dialog.is_ok
 
     def calc_insert_valueline_position(self, valueline, track_num):
         pos = 0
