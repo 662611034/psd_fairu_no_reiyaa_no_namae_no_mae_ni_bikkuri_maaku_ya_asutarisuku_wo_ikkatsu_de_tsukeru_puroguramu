@@ -347,7 +347,6 @@ class AppTop(gui.RootWindow):
             使われない
         mode: int
             0: 既定の名前、1: 名前を指定
-            なお、現段階ではボタンが1つしかないため、初期値として仮に0を指定しています
         '''
         if not self.psd:
             mb.showwarning('ファイルがありません', 'まずはファイルを開いてください')
