@@ -633,6 +633,7 @@ class AppTop(gui.RootWindow):
         self.unre_state(0, 0).unre_state(1, 0)
 
         self.flag_saved = True  # 開いた直後は保存されたファイルと現在の表示状態が同じであるためTrue
+        self.deal_anmlayer(None, 2)
         self.book_script.reset_form()
         return self
 
