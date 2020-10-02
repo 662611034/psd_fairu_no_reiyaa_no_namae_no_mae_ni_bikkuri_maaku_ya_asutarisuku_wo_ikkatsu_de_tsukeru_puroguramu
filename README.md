@@ -1,5 +1,5 @@
 # ダウンロード
-最新版は[こちら](https://drive.google.com/file/d/1lXuv_mEhp3UUJhaKZIHje-j0l1GCjdkI/view?usp=sharing)のリンクからダウンロードできます。容量が大きくて(84MBほど)githubにアップロードできませんでした。   
+最新版は[こちら](https://drive.google.com/file/d/19ordJFOEzoQdd68PA-U0uMeiMqNC755n/view?usp=sharing)のリンクからダウンロードできます。容量が大きくて(84MBほど)githubにアップロードできませんでした。   
 過去バージョンはアップデート履歴からダウンロードできます。
 
 # このプログラムについて
@@ -41,7 +41,9 @@
 - [2020.09.21](https://drive.google.com/file/d/1_F1Vqqie_UBKHRNkFBNMCXZobgjFKSkP/view?usp=sharing)
   - .png抽出機能（仮）を追加しました
 - [2020.09.29](https://drive.google.com/file/d/1lXuv_mEhp3UUJhaKZIHje-j0l1GCjdkI/view?usp=sharing)
-  - 一部特殊文字を含むレイヤーを.anmに出力するときエラーが発生する問題を修正していただきました(Istallia様)
+  - 一部特殊文字を含むレイヤーを.anmに出力するときエラーが発生する問題を修正していただきました(イスターリャ様)
+- [2020.10.02](https://drive.google.com/file/d/19ordJFOEzoQdd68PA-U0uMeiMqNC755n/view?usp=sharing)
+  - .anmファイル出力時に目パチ口パク生成タブで生成したスクリプトを組み込めるように改善していただきました(イスターリャ様)
  
   
 # 使い方
@@ -87,6 +89,8 @@
 - 規定の名前であれ別名であれ、書き出しを実行すればその時点で.psdファイルが上書きされます
 - 「既定の名前で書き出す」と元の.psdファイルと同じフォルダに「同じ名前+末尾文字列.anm」のファイルに出力されます
 - 「既定の名前で書き出す」は同名ファイルが既に存在していても確認を行うことなく上書きします
+- 「目パチ口パクを含めて書き出す」にチェックを入れると、目パチや口パクのタブで行生成済みのスクリプトを挿入、トラックの値も処理された状態で出力できます (by istallia)
+  - トラック番号入力ダイアログを右上のxボタンで閉じると.anmファイルの出力が中断されます
 
 ## .pngファイルの抽出（仮）
 - .anmファイル書き出し対象のグループに含まれるレイヤーをそれぞれ.pngファイルに書き出すことができます
