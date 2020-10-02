@@ -243,6 +243,10 @@ class PSDImageExt(psd_tools.PSDImage):
 
 
 if __name__ == '__main__':
-    ifile = r'/home/user/Downloads/im5467479.psd'
+    ifile = r'/home/h6626/Downloads/im5467479.psd'
     psd0 = PSDImageExt.open(ifile, encoding='sjis')
-    psd0.save(ifile)
+    t, v = psd0.export_anmscript(psd0[2])
+    with open('track.txt', 'w') as f:
+        f.write(t)
+    with open('value.txt', 'w') as f:
+        f.write(v)

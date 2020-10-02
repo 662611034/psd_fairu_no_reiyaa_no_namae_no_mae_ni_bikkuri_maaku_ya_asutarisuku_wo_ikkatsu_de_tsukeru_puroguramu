@@ -106,6 +106,79 @@ class Logger():
         return False if self.logs[which] else True
 
 
+class PachiPakuEmbedding():
+    '''
+    プログラム内で生成された目パチ口パクをanmスクリプトに組み込むクラス
+
+    Attributes
+    ----------
+    trackline, valueline: str
+        PSDImageExtで生成されるtrackline, valueline
+    pachipaku: str
+        目パチ口パク補助タブの出力欄から取得した文字列
+    '''
+
+    @classmethod
+    def embed(cls, trackline, valueline, pachipaku):
+        '''
+        わざわざインスタンス作って数行書くほどでもないため、
+        処理をまとめたクラスメソッドを作って1行で書けるようにする
+
+        Parameters
+        ----------
+        ClassのAttributesのままなので割愛
+        '''
+        instance = cls(trackline, valueline, pachipaku)
+        instance.increase_tracknum().insert_valueline()
+        return instance.trackline, instance.valueline
+
+    def __init__(self, trackline, valueline, pachipaku):
+        '''
+        コンストラクタでは引数を受け取るだけ
+
+        Parameters
+        ----------
+        ClassのAttributesのままなので割愛
+        '''
+        self.trackline = trackline
+        self.valueline = valueline
+        self.pachipaku = pachipaku
+
+    def increase_tracknum(self):
+        '''
+        tracklineの数字を増やす
+        (pachipakuを改行でsplitしたリストの要素数 - 1) が数字の増加量になる
+        -1が必要なのはpachipakuの最後に空行が入っているため
+
+        増やす数字の位置はfindで探してもいいけどsplitのほうがわかりやすいと思ったのでsplit採用
+        また、左側からの順番で調べるとレイヤー名の「,」が入ってるときバグるため、右側から順番で特定する
+        '''
+
+        num = len(self.pachipaku.split('\n')) - 1  # 数字増加分
+        splitedtrack = self.trackline.split(',')
+        splitedtrack[-3] = str(int(splitedtrack[-3]) + num)  # 「,」でsplitして右から3番目要素を置換
+
+        # つなげて終わり
+        trackline_new = splitedtrack[0]
+        for word in splitedtrack[1:]:
+            trackline_new += ',' + word
+        self.trackline = trackline_new
+        return self
+
+    def insert_valueline(self):
+        '''
+        pachipakuをvaluelineに挿入する
+        改行でsplitして途中で差し込んで終わり
+        '''
+        splitedvalue = self.valueline.split('\n')
+        valueline_new = splitedvalue[0] + '\n'
+        valueline_new += self.pachipaku
+        for line in splitedvalue[1:]:
+            valueline_new += line + '\n'
+        self.valueline = valueline_new[:-1] # 最後に空行が余計に1つつくことになるので削除
+        return self
+
+
 class AppTop(gui.RootWindow):
     '''
     .psdファイルのレイヤーの名前の前に「!」や「*」を一括でつけるプログラムのトップアプリケーション
@@ -321,6 +394,11 @@ class AppTop(gui.RootWindow):
         if not self.flag_saved:
             self.save_file(None, 0)
 
+        anmlayers = self.get_anmlayers()
+        if not anmlayers:
+            self.show_msg('書き出し対象グループがありません')
+            return self
+
         if mode == 0:
             efile_path = self.ifile_path[:-4] + self.get_anmtail() + '.anm'
         elif mode == 1:
@@ -330,10 +408,20 @@ class AppTop(gui.RootWindow):
             if efile_path[-4:] != '.anm':
                 efile_path += '.anm'
 
-        self.export_subfunc(efile_path)
+        track_destination = [-1, -1, -1]
+        if self.bool_pachipaku.get():
+            dialog = gui.TrackNumberDialog(master=self, groups=anmlayers)
+            dialog.wait_window()
+            track_destination = dialog.getTracksNumber()
+            if not dialog.is_ok:
+                self.show_msg('.anmファイルの書き出しを中断しました')
+                return self
+
+        self.export_subfunc(efile_path, anmlayers, track_destination)
         self.show_msg('.anmファイルを出力しました')
 
         return self
+
 
     def export_pngs(self, event):
         '''
@@ -516,6 +604,7 @@ class AppTop(gui.RootWindow):
         ・dict_namesの初期化
         ・最初は非活性化されてた「変換」などのメニューを活性化
         ・「戻す」「やり直す」ログを初期化
+        ・目パチ口パク補助タブ入力欄を消去
         などする
 
         Parameters
@@ -544,6 +633,7 @@ class AppTop(gui.RootWindow):
         self.unre_state(0, 0).unre_state(1, 0)
 
         self.flag_saved = True  # 開いた直後は保存されたファイルと現在の表示状態が同じであるためTrue
+        self.book_script.reset_form()
         return self
 
     def remake_frame_show(self):
@@ -651,7 +741,7 @@ class AppTop(gui.RootWindow):
 
         return self
 
-    def export_subfunc(self, efile_path):
+    def export_subfunc(self, efile_path, anmlayers=[], track_destination=[-1, -1, -1]):
         '''
         .anmファイル書き出しの内部処理
         例のごとくexport_scriptと明確な線引きはない
@@ -667,13 +757,14 @@ class AppTop(gui.RootWindow):
         efile_path: str
             書き出す.anmファイルのパス
         '''
-        anmlayers = self.get_anmlayers()
-        if not anmlayers:
-            return self
-
         tracklines, valuelines = '', ''
         for tracknum, layer in enumerate(anmlayers):
             trackline, valueline = self.psd.export_anmscript(layer, tracknum)
+            for which, destination in enumerate(track_destination):
+                # which: 0-目パチ、1-口パクシンプル、2-口パクあいうえお
+                if destination == tracknum:
+                    trackline, valueline = \
+                            PachiPakuEmbedding.embed(trackline, valueline, self.get_script_text(which))
             tracklines += trackline
             valuelines += '\n' + valueline
 
@@ -682,6 +773,7 @@ class AppTop(gui.RootWindow):
             fout.write(valuelines)
 
         return self
+
 
 # from here, funcs need for conversion
     def convert_subfunc(self, layer, mode):

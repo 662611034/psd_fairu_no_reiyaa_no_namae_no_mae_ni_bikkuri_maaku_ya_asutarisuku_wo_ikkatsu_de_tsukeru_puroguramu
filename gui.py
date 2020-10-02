@@ -69,6 +69,10 @@ EXPORTMSG='''
 
 ・既定の名前で書き出す場合、同名ファイルが存在したら上書きします
 　確認メッセージは表示されません
+
+・「目パチ口パクを含めて書き出す」にチェックを入れると、
+　目パチや口パクのタブで行生成済みのスクリプトを自動で組み込ませることができます。
+　トラックの値も処理されるため、出力した.anmはそのままご利用いただけます
 '''
 
 
@@ -119,7 +123,9 @@ SCRIPTMSG = '''
 ・公式と異なる点は、文末に「,」がつくことと、
 　画面下部の出力欄に生成されたスクリプトを貯められるところです
 
-・出力された文字列は公式の場合と同じように.anmファイルに貼り付けて使います
+・出力された文字列は公式の場合と同じように利用者が.anmファイルに貼り付けて使うのが
+　基本ですが、「(目パチ口パクごと)」付きのボタンから書き出しすれば.anmファイルの
+　書き出し時に自動で挿入されます
 
 ・スクリプト生成のために必要なレイヤーパスは
 　レイヤー名表示領域のレイヤー名をダブルクリックするとクリップボードにコピーされます
@@ -424,12 +430,20 @@ class Anm_Frame(ttk.Frame):
 
         self.entry_anmtail = tk.Entry(subframe_tmp, width=12)
         self.entry_anmtail.grid(row=1, column=1, padx=6, pady=6)
+
+        subsubframe_tmp = ttk.Frame(subframe_tmp)
+        self.bool_pachipaku = tk.BooleanVar()
+        tk.Checkbutton(subsubframe_tmp, variable=self.bool_pachipaku).grid(row=0, column=0, padx=6, pady=6)
+        label_tmp = ttk.Label(subsubframe_tmp, text='目パチ口パクを含めて書き出す')
+        label_tmp.bind('<Button-1>', lambda event: self.bool_pachipaku.set(not self.bool_pachipaku.get()))
+        label_tmp.grid(row=0, column=1, padx=6, pady=0)
+        subsubframe_tmp.grid(row=2, column=0, columnspan=2, padx=6, pady=6)
         
         self.button_exports = []
         texts = ['既定の名前で書き出し', '名前を指定して書き出し', '.png抽出（仮）']
         for i in range(3):
             self.button_exports.append(tk.Button(subframe_tmp, text=texts[i], width=24))
-            self.button_exports[i].grid(row=i+2, column=0, columnspan=2, padx=6, pady=6)
+            self.button_exports[i].grid(row=i+3, column=0, columnspan=2, padx=6, pady=6)
         subframe_tmp.grid(row=1, column=2, padx=6, pady=6)
         #subframe 1
         return self
@@ -774,16 +788,6 @@ class EntryFrameSimple(ttk.Frame):
 
     Attributes
     ----------
-    combo_level: ttk.Combobox
-        階層条件を指定するプルダウンメニュー
-    entry_word: tk.Entry
-        レイヤーの名前の条件になる文字列を入れる入力フォーム
-    combo_match: ttk.Combobox
-        レイヤーの名前と文字列が「一致するか」「包含関係か」を選ぶプルダウンメニュー
-    combo_class: ttk.Combobox
-        レイヤー、グループ、その両方、あるいはグループ直下のものを選ぶプルダウンメニュー
-    button_converts: list
-        tk.Buttonの配列。「!」をつける、「*」をつける、記号を消すボタン
     
     '''
     def __init__(self, master=None, **kwargs):
@@ -914,6 +918,10 @@ class TextFrame(ttk.Frame):
         pyperclip.copy(content)
         return 'break'
 
+    def gettext(self, event=None):
+        content = self.text.get('1.0', 'end-1c')
+        return content
+
     def del1line_text(self, event=None):
         self.text.config(state='normal')
         self.text.delete('end-2l', 'end-1c')
@@ -983,7 +991,11 @@ class KPOptionFrame(ttk.Frame):
         option = f',{self.entry_consonant.get().strip()},{"true" if self.bool_option.get() else "false"}'
         return option
 
+
 class ScriptBook(ttk.Notebook):
+    '''
+    目パチ口パク生成フレームをまとめたタブ
+    '''
 
     def __init__(self, master, *args, **kwargs):
         super().__init__(master, *args, **kwargs)
@@ -1024,6 +1036,89 @@ class ScriptBook(ttk.Notebook):
             self.frame_text[i].addline(script)
             return 'break'
         return func_addline
+
+    def get_script_text(self, i):
+        return self.frame_text[i].gettext()
+
+    def reset_form(self):
+        for frame in self.frame_entry:
+            for entry in frame.entry_path:
+                entry.delete(0, 'end')
+        for frame in self.frame_text:
+            frame.clear_text()
+        return self
+
+
+class TrackNumberDialog(tk.Toplevel):
+    '''
+    スクリプトをどのトラックに挿入するかを指定するダイアログ
+    anmファイルを目パチ口パクスクリプトと組み合わせた状態で出力する場合に呼び出される
+
+    Attributes
+    ----------
+    track_blink_eye: int
+        目パチスクリプトの挿入先トラック。挿入しない場合は-1
+    track_lipsync_oc: int
+        口パク(開閉のみ)スクリプトの挿入先トラック。挿入しない場合は-1
+    track_lipsync_aiueo: int
+        口パク(あいうえお)スクリプトの挿入先トラック。挿入しない場合は-1
+    is_ok: bool
+        「書き出す」ボタンが押された状態で終了したか
+    entry_track_blink_eye: tk.Entry
+        目パチのトラック番号の入力フォーム
+    entry_track_lipsync_oc: tk.Entry
+        口パク(開閉のみ)のトラック番号の入力フォーム
+    entry_track_lipsync_aiueo: tk.Entry
+        口パク(あいうえお)のトラック番号の入力フォーム
+    '''
+    def __init__(self, master=None, groups=[], **kwargs):
+        # super(TrackNumberDialog, self).__init__()
+        super().__init__(master, **kwargs)
+        self.combovalues = ['挿入しない'] + [f'track{i}: {layer.name}' for i, layer in enumerate(groups)]
+
+        self.track_destination = [-1, -1, -1]
+        self.is_ok             = False
+        self.make_forms()
+        self.make_buttons()
+        self.wm_attributes('-topmost', 1)
+        self.protocol('WM_DELETE_WINDOW', self.destroy)
+        self.grab_set()
+
+    def make_forms(self):
+        frame_tmp = ttk.Frame(self)
+        row = 1
+        label_tmp = ttk.Label(frame_tmp, text='スクリプトを挿入するトラックを選んでください')
+        label_tmp.grid(row=row, column=0, columnspan=2, pady=6)
+
+        # index 0: 目パチ、1: 口パクシンプル、2: 口パクあいうえお
+        row += 1
+        labels = ['目パチ', '口パク(開閉のみ)', '口パク(あいうえお)']
+        self.combo_tracks = []
+        for i in range(3):
+            ttk.Label(frame_tmp, text=labels[i]).grid(row=row+i, column=0, padx=6)
+            self.combo_tracks.append(ttk.Combobox(frame_tmp, state='readonly', width=12, values=self.combovalues))
+            self.combo_tracks[i].current(0)
+            self.combo_tracks[i].grid(row=row+i, column=1, pady=6)
+            self.combo_tracks[i].focus_set()
+        frame_tmp.pack(padx=6, pady=4)
+        return self
+
+    def make_buttons(self):
+        frame_tmp  = ttk.Frame(self)
+        button_tmp = tk.Button(frame_tmp, text="書き出す", command=self.close_dialog)
+        button_tmp.pack()
+        frame_tmp.pack(padx=6, pady=4)
+        return self
+
+    def close_dialog(self):
+        for i in range(3):
+            self.track_destination[i] = self.combo_tracks[i].current() - 1
+        self.is_ok = True
+        self.destroy()
+        return self
+
+    def getTracksNumber(self):
+        return self.track_destination
 
 
 class HelpWindow(tk.Toplevel):
@@ -1106,6 +1201,8 @@ class RootWindow(tk.Tk):
         .anmファイル書き出し関連ウィジェットが配置されたフレーム
     frame_show: ShowFrame
         レイヤー構造表示領域のフレーム
+    book_script: ScriptBook
+        スクリプト保管用のBook(?) スクリプトをコードから取得するために保管
     '''
 
     def __init__(self, **kwargs):
@@ -1142,7 +1239,8 @@ class RootWindow(tk.Tk):
 
         book_tmp.add(frame_convert, text='レイヤー名変換')
 
-        book_tmp.add(ScriptBook(self), text='目パチ口パク生成')
+        self.book_script = ScriptBook(self)
+        book_tmp.add(self.book_script, text='目パチ口パク生成')
 
         frame_L.grid(row=0, column=0, sticky='n', padx=12, pady=12)
         ttk.Separator(self, orient='vertical').grid(row=0, column=1, sticky='ns', padx=16)
@@ -1171,9 +1269,12 @@ class RootWindow(tk.Tk):
         self.get_anmlayers = self.frame__anm.get_anmlayers
         self.get_anmtail = self.frame__anm.get_anmtail
         self.button_clears = self.frame__anm.button_clears
+        self.bool_pachipaku = self.frame__anm.bool_pachipaku
         self.button_exports = self.frame__anm.button_exports
 
         self.button_foldall = self.frame_show.button_foldall
+
+        self.get_script_text = self.book_script.get_script_text
 
         return self
 
