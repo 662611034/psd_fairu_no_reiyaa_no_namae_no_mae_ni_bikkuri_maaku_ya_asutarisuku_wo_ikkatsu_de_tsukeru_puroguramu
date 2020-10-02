@@ -1,5 +1,5 @@
 # ダウンロード
-最新版は[こちら](https://drive.google.com/file/d/19ordJFOEzoQdd68PA-U0uMeiMqNC755n/view?usp=sharing)のリンクからダウンロードできます。容量が大きくて(84MBほど)githubにアップロードできませんでした。   
+最新版は[こちら](https://drive.google.com/file/d/1Fyso2LRvkjxQCPhRJmeDkpK4pz5dhxE6/view?usp=sharing)のリンクからダウンロードできます。容量が大きくて(84MBほど)githubにアップロードできませんでした。   
 過去バージョンはアップデート履歴からダウンロードできます。
 
 # このプログラムについて
@@ -42,8 +42,9 @@
   - .png抽出機能（仮）を追加しました
 - [2020.09.29](https://drive.google.com/file/d/1lXuv_mEhp3UUJhaKZIHje-j0l1GCjdkI/view?usp=sharing)
   - 一部特殊文字を含むレイヤーを.anmに出力するときエラーが発生する問題を修正していただきました(イスターリャ様)
-- [2020.10.02](https://drive.google.com/file/d/19ordJFOEzoQdd68PA-U0uMeiMqNC755n/view?usp=sharing)
+- [2020.10.02](https://drive.google.com/file/d/1Fyso2LRvkjxQCPhRJmeDkpK4pz5dhxE6/view?usp=sharing)
   - .anmファイル出力時に目パチ口パク生成タブで生成したスクリプトを組み込めるように改善していただきました(イスターリャ様)
+  - ファイルを開いたとき口パク目パチ生成タブの内容及び.anmファイル書き出し対象レイヤーリストをクリアするように修正しました
  
   
 # 使い方
