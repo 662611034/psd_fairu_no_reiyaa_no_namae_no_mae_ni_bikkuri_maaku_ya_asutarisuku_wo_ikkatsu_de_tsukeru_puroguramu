@@ -1,5 +1,5 @@
 # ダウンロード
-最新版は[こちら](https://drive.google.com/file/d/1Fyso2LRvkjxQCPhRJmeDkpK4pz5dhxE6/view?usp=sharing)のリンクからダウンロードできます。容量が大きくて(84MBほど)githubにアップロードできませんでした。   
+最新版は[こちら](https://github.com/662611034/psd_fairu_no_reiyaa_no_namae_no_mae_ni_bikkuri_maaku_ya_asutarisuku_wo_ikkatsu_de_tsukeru_puroguramu/releases/download/201002/psd_fairu_no_reiyaa_no_namae_no_mae_ni_bikkuri_maaku_ya_asutarisuku_wo_ikkatsu_de_tsukeru_puroguramu_201002.zip)のリンクからダウンロードできます。容量が大きくて(84MBほど)githubにアップロードできませんでした。   
 過去バージョンはアップデート履歴からダウンロードできます。
 
 # このプログラムについて
@@ -45,6 +45,8 @@
 - [2020.10.02](https://drive.google.com/file/d/1Fyso2LRvkjxQCPhRJmeDkpK4pz5dhxE6/view?usp=sharing)
   - .anmファイル出力時に目パチ口パク生成タブで生成したスクリプトを組み込めるように改善していただきました(イスターリャ様)
   - ファイルを開いたとき口パク目パチ生成タブの内容及び.anmファイル書き出し対象レイヤーリストをクリアするように修正しました
+- [2020.10.03](https://github.com/662611034/psd_fairu_no_reiyaa_no_namae_no_mae_ni_bikkuri_maaku_ya_asutarisuku_wo_ikkatsu_de_tsukeru_puroguramu/releases/download/201002/psd_fairu_no_reiyaa_no_namae_no_mae_ni_bikkuri_maaku_ya_asutarisuku_wo_ikkatsu_de_tsukeru_puroguramu_201002.zip)
+  - プログラムの更新はありませんが、ダウンロードリンクをgithubに一元化しました
  
   
 # 使い方
