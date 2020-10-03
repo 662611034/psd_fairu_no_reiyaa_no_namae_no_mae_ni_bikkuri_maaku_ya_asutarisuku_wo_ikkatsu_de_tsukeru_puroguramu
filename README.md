@@ -47,6 +47,7 @@
   - ファイルを開いたとき口パク目パチ生成タブの内容及び.anmファイル書き出し対象レイヤーリストをクリアするように修正しました
 - [2020.10.03](https://github.com/662611034/psd_fairu_no_reiyaa_no_namae_no_mae_ni_bikkuri_maaku_ya_asutarisuku_wo_ikkatsu_de_tsukeru_puroguramu/releases/download/201002/psd_fairu_no_reiyaa_no_namae_no_mae_ni_bikkuri_maaku_ya_asutarisuku_wo_ikkatsu_de_tsukeru_puroguramu_201002.zip)
   - プログラムの更新はありませんが、ダウンロードリンクをgithubに一元化しました
+  - 今後の更新履歴はgithubのreleaseの方にアップロードされます
  
   
 # 使い方
