@@ -83,7 +83,7 @@ EXPORTMSG='''
 　目パチや口パクのタブで行生成済みのスクリプトを自動で組み込ませることができます。
 　トラックの値も処理されるため、出力した.anmはそのままご利用いただけます
 
-・「直下以外も書き出し(グループ除く)」にチェックを入れると
+・.anm書き出し対象レイヤーの左側の「深」にチェックを入れると
 　直下より深いグループに含まれる全ての「グループでないレイヤー」も.anmに書き出します
 '''
 
@@ -417,7 +417,7 @@ class Anm_Frame(ttk.Frame):
         「既定の名前で書き出す」「名前を指定して書き出す」のボタンのリスト
     bool_pachipaku: boolean
         目パチ口パクを.anmに組み込むかの真理値
-    bool_deeplayer: boolean
+    bool_deeplayer: list of boolean
         直下以外のレイヤーを.anmに書き出すかの真理値
     '''
     def __init__(self, master, **kwargs):
@@ -436,18 +436,28 @@ class Anm_Frame(ttk.Frame):
 
         #subframe 0
         subframe_tmp = ttk.Frame(self)
-        ttk.Label(subframe_tmp, text='書き出し対象レイヤー').grid(row=0, column=0, columnspan=2, padx=6, pady=6)
+        ttk.Label(subframe_tmp, text='深').grid(row=0, column=0)
+        ttk.Label(subframe_tmp, text='書き出し対象レイヤー').grid(row=0, column=1, columnspan=2, padx=6, pady=6)
+
+        self.bool_deeplayer = []
         self.label_anmlist = []
+
         for i in range(4):
-            ttk.Label(subframe_tmp, text=f'track{i}:').grid(row=i+1, column=0, padx=6, pady=6)
+            self.bool_deeplayer.append(tk.BooleanVar())
+            tk.Checkbutton(subframe_tmp, variable = self.bool_deeplayer[i]).grid(row=i+1, column=0)
+            label_tmp = ttk.Label(subframe_tmp, text=f'track{i}:', anchor='w')
+            label_tmp.grid(row=i+1, column=1, padx=0, pady=6, sticky='w')
+            label_tmp.bind('<Button-1>', lambda event, i=i: self.bool_deeplayer[i].set(not self.bool_deeplayer[i].get()))
             self.label_anmlist.append(tk.Label(subframe_tmp, text='', anchor='w'))
-            self.label_anmlist[i].grid(row=i+1, column=1, padx=6, pady=6, sticky='w')
-        subframe_tmp.grid(row=1, column=0, padx=6, pady=6)
+            self.label_anmlist[i].grid(row=i+1, column=2, padx=6, pady=6, sticky='w')
+        subsubframe_tmp = ttk.Frame(subframe_tmp)
         self.button_clears = []
         texts = ['1つ外す', '全部外す']
         for i in range(2):
-            self.button_clears.append(tk.Button(subframe_tmp, text=texts[i], width=12))
-            self.button_clears[i].grid(row=5, column=i, padx=6, pady=6)
+            self.button_clears.append(tk.Button(subsubframe_tmp, text=texts[i], width=6))
+            self.button_clears[i].grid(row=0, column=i+1, padx=12, pady=6)
+        subsubframe_tmp.grid(row=5, column=0, columnspan=3)
+        subframe_tmp.grid(row=1, column=0, padx=6, pady=6)
         #subframe 0
 
         ttk.Separator(self, orient='vertical').grid(row=1, column=1, sticky='ns', padx=32)
@@ -467,12 +477,6 @@ class Anm_Frame(ttk.Frame):
         label_tmp.bind('<Button-1>', lambda event: self.bool_pachipaku.set(not self.bool_pachipaku.get()))
         label_tmp.grid(row=0, column=1, padx=6, pady=0)
         subsubframe_tmp.grid(row=2, column=0, columnspan=2, padx=6, pady=6, sticky='w')
-        
-        self.bool_deeplayer = tk.BooleanVar()
-        tk.Checkbutton(subsubframe_tmp, variable=self.bool_deeplayer).grid(row=1, column=0, padx=0, pady=0)
-        label_tmp = ttk.Label(subsubframe_tmp, text='直下以外も書き出す(グループ除く)')
-        label_tmp.bind('<Button-1>', lambda event: self.bool_deeplayer.set(not self.bool_deeplayer.get()))
-        label_tmp.grid(row=1, column=1, padx=6, pady=0)
         
         self.button_exports = []
         texts = ['既定の名前で書き出し', '名前を指定して書き出し', '.png抽出（仮）']

@@ -831,12 +831,14 @@ class AppTop(gui.RootWindow):
         '''
         
         # bool_deeplayerによってanmscriptのメソッドが変わる
-        func_anmscript = \
-                self.psd.export_anmscript_deep if self.bool_deeplayer.get() \
-                else self.psd.export_anmscript
 
         tracklines, valuelines = '', ''
+
         for tracknum, layer in enumerate(anmlayers):
+            func_anmscript = \
+                    self.psd.export_anmscript_deep if self.bool_deeplayer[tracknum].get() \
+                    else self.psd.export_anmscript
+
             trackline, valueline = func_anmscript(layer, tracknum)
             for which, destination in enumerate(track_destination):
                 # which: 0-目パチ、1-口パクシンプル、2-口パクあいうえお
