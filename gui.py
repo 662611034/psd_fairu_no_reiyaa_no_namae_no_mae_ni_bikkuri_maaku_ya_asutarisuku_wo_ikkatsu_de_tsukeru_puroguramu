@@ -33,6 +33,15 @@ CONVMSG = '''
 
 ・ボタンでの実行でもショートカットキーでの実行でも
 　レイヤー指定条件は活性化しているタブに従います
+
+・「前/後ろにつける」ボタンで任意文字列をレイヤー名の前後につけることができます
+
+・任意の文字列を削除する機能はないので、任意文字列を挿入するときは慎重に行ってください
+
+・F12キーでレイヤー名の自由編集することができます
+
+・自由編集モードでは保存、戻す、やり直す、変換、書き出しなどの機能が制限されます
+　それらの機能は自由編集モードを終了してから実行してください
 '''
 
 CHECKMSG='''
@@ -73,6 +82,9 @@ EXPORTMSG='''
 ・「目パチ口パクを含めて書き出す」にチェックを入れると、
 　目パチや口パクのタブで行生成済みのスクリプトを自動で組み込ませることができます。
 　トラックの値も処理されるため、出力した.anmはそのままご利用いただけます
+
+・「直下以外も書き出し(グループ除く)」にチェックを入れると
+　直下より深いグループに含まれる全ての「グループでないレイヤー」も.anmに書き出します
 '''
 
 
@@ -100,6 +112,8 @@ HOTKEYS = '''
 ・ctrl+s / ctrl+shift+s：上書き保存 / 別名で保存
 
 ・F5 / F6 / F7：「!」をつける / 「*」をつける / 記号を消す
+
+・F12：自由編集モードを開始/終了する
 
 ・ctrl+z / ctrl+(y/shift+z)：戻す / やり直す
 
@@ -218,6 +232,7 @@ class CtrlFrame(ttk.Frame):
     変換条件やボタンがあるフレーム
     qc: quick convert、チェックを入れたレイヤーを返還する
     cc: convert by condition、階層やら何やら条件を指定して変換
+    fe: free edit、自由編集
 
     Attributes
     ----------
@@ -233,6 +248,8 @@ class CtrlFrame(ttk.Frame):
         レイヤー、グループ、その両方、あるいはグループ直下のものを選ぶプルダウンメニュー
     button_converts: list
         tk.Buttonの配列。「!」をつける、「*」をつける、記号を消すボタン
+    entry_arbitrary: tk.Entry
+        挿入する任意文字列の入力欄
     
     '''
     def __init__(self, master=None, **kwargs):
@@ -247,7 +264,7 @@ class CtrlFrame(ttk.Frame):
         self.book.pack(anchor='w', pady=12)
         self.make_frame_qc()
         self.make_frame_cc()
-        self.make_buttons()
+        self.make_button_layer()
 
     def make_frame_qc(self):  # qc: quick convert
         '''
@@ -301,9 +318,9 @@ class CtrlFrame(ttk.Frame):
         self.book.add(frame_tmp, text='条件指定')
         return self
 
-    def make_buttons(self):
+    def make_button_layer(self):
         '''
-        変換ボタン3つを作る
+        変換ボタン5つと任意文字列を作る
         '''
         frame_tmp = ttk.Frame(self)
 
@@ -312,6 +329,14 @@ class CtrlFrame(ttk.Frame):
         for i in range(3):
             self.button_converts.append(tk.Button(frame_tmp, text=texts[i], width=18))
             self.button_converts[i].grid(row=0, column=i, sticky='w', padx=6, pady=6)
+
+        self.entry_arbitrary = tk.Entry(frame_tmp, width=22)
+        self.entry_arbitrary.grid(row=1, column=0, sticky='w', padx=6, pady=6)
+        self.entry_arbitrary.insert(0, ':flipx')
+        texts = ['前につける', '後ろにつける']
+        for i in range(2):
+            self.button_converts.append(tk.Button(frame_tmp, text=texts[i], width=18))
+            self.button_converts[i+3].grid(row=1, column=i+1, sticky='w', padx=6, pady=6)
         
         frame_tmp.pack()
         return self
@@ -390,6 +415,10 @@ class Anm_Frame(ttk.Frame):
         既定の名前で書きだす場合ファイル名の末尾に加える文字列を入力するためのフォーム
     button_exports: list
         「既定の名前で書き出す」「名前を指定して書き出す」のボタンのリスト
+    bool_pachipaku: boolean
+        目パチ口パクを.anmに組み込むかの真理値
+    bool_deeplayer: boolean
+        直下以外のレイヤーを.anmに書き出すかの真理値
     '''
     def __init__(self, master, **kwargs):
         '''
@@ -433,17 +462,23 @@ class Anm_Frame(ttk.Frame):
 
         subsubframe_tmp = ttk.Frame(subframe_tmp)
         self.bool_pachipaku = tk.BooleanVar()
-        tk.Checkbutton(subsubframe_tmp, variable=self.bool_pachipaku).grid(row=0, column=0, padx=6, pady=6)
+        tk.Checkbutton(subsubframe_tmp, variable=self.bool_pachipaku).grid(row=0, column=0, padx=0, pady=0)
         label_tmp = ttk.Label(subsubframe_tmp, text='目パチ口パクを含めて書き出す')
         label_tmp.bind('<Button-1>', lambda event: self.bool_pachipaku.set(not self.bool_pachipaku.get()))
         label_tmp.grid(row=0, column=1, padx=6, pady=0)
-        subsubframe_tmp.grid(row=2, column=0, columnspan=2, padx=6, pady=6)
+        subsubframe_tmp.grid(row=2, column=0, columnspan=2, padx=6, pady=6, sticky='w')
+        
+        self.bool_deeplayer = tk.BooleanVar()
+        tk.Checkbutton(subsubframe_tmp, variable=self.bool_deeplayer).grid(row=1, column=0, padx=0, pady=0)
+        label_tmp = ttk.Label(subsubframe_tmp, text='直下以外も書き出す(グループ除く)')
+        label_tmp.bind('<Button-1>', lambda event: self.bool_deeplayer.set(not self.bool_deeplayer.get()))
+        label_tmp.grid(row=1, column=1, padx=6, pady=0)
         
         self.button_exports = []
         texts = ['既定の名前で書き出し', '名前を指定して書き出し', '.png抽出（仮）']
         for i in range(3):
             self.button_exports.append(tk.Button(subframe_tmp, text=texts[i], width=24))
-            self.button_exports[i].grid(row=i+3, column=0, columnspan=2, padx=6, pady=6)
+            self.button_exports[i].grid(row=i+4, column=0, columnspan=2, padx=6, pady=6)
         subframe_tmp.grid(row=1, column=2, padx=6, pady=6)
         #subframe 1
         return self
@@ -508,6 +543,19 @@ class Anm_Frame(ttk.Frame):
 
 
 class ToggleFrame(ttk.Frame):
+    '''
+    ttk.Frameを継承し、packとpack_forgetをtoggleで実行できるようにしたクラス
+    レイヤー表示領域の折りたたみと展開のために定義
+
+    Attributes
+    ----------
+    bool_packed: bool
+        展開されてるか折りたたまれてるかの真理値
+
+    Notes:
+    ------
+    pack/pack_forgetされてるものは再び同じことをしても何も起こらないようにオーバーライド
+    '''
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -528,6 +576,14 @@ class ToggleFrame(ttk.Frame):
         return None
 
     def toggle(self, event=None):
+        '''
+        packとpack_forgetを適切に実行
+
+        Parameters
+        ----------
+        event: tk.Event
+            使わない
+        '''
         if self.bool_packed:
             self.pack_forget()
         else:
@@ -599,8 +655,8 @@ class LayerFrame(ttk.Frame):
         check_tmp = tk.Checkbutton(frame_tmp, variable=selected_tmp)
         check_tmp.grid(row=0, column=1)
 
-        entry_tmp = tk.Entry(frame_tmp, width=12)
-        if layer.level:
+        entry_tmp = tk.Entry(frame_tmp, width=16)
+        if layer.level:  # Rootレイヤーでは扱いが特殊
             entry_tmp.insert(0, layer.name)
             entry_tmp.config(state='readonly')
             entry_tmp.bind('<Double-Button-1>', lambda event: pyperclip.copy('v1.' + layer.fullpath))
@@ -612,7 +668,7 @@ class LayerFrame(ttk.Frame):
 
         self.dict = {'label': label_tmp, 'selected': selected_tmp, 'check': check_tmp, 'entry': entry_tmp}
 
-        if layer.is_group():
+        if layer.is_group():  # グループの時のみ作るウィジェット
             button_tmp = tk.Button(frame_tmp, text='追加')
             button_tmp.grid(row=0, column=3) if layer.level else None
             self.dict['button'] = button_tmp
@@ -656,6 +712,8 @@ class ShowFrame(ttk.Frame):
         canvasの横方向スクロールバー
     scroll_y: tk.Scrollbar
         canvasの縦方向スクロールバー
+    button_foldall: list of tk.Button
+        全て畳む、展開するボタン
     '''
 
     def __init__(self, master, width=240, height=720):
@@ -733,6 +791,9 @@ class ShowFrame(ttk.Frame):
         return self
 
     def make_buttons(self):
+        '''
+        展開ボタン
+        '''
         self.button_foldall = []
         text = ['全て展開', '全て畳む']
         for i in range(2):
@@ -774,7 +835,7 @@ class ShowFrame(ttk.Frame):
         frame_tmp.pack(anchor='w')
 
         if layer.is_group():
-            for sublayer in layer:
+            for sublayer in reversed(layer):
                 self.make_widgets_recursive(frame_tmp.dict['subframe'], sublayer).pack()
 
         return frame_tmp
@@ -782,13 +843,14 @@ class ShowFrame(ttk.Frame):
 
 class EntryFrameSimple(ttk.Frame):
     '''
-    変換条件やボタンがあるフレーム
-    mp: 目パチ
-    kp: 口パク
+    目パチと口パク(開閉のみ)の入力欄のフレーム
 
     Attributes
     ----------
-    
+    entry_path: list of tk.Entry
+        レイヤーのパスを入力する欄
+    button_clearline: list of tk.Button
+        各entry_pathをクリアするボタン
     '''
     def __init__(self, master=None, **kwargs):
         '''
@@ -806,6 +868,7 @@ class EntryFrameSimple(ttk.Frame):
         for i in range(5):
             self.entry_path.append(tk.Entry(self, width=48))
 
+            # 一部ショートカットを実装
             self.entry_path[i].bind('<Control-d>', self.make_func_clear_line(i))
             self.entry_path[i].bind('<Control-a>', self.make_func_select_line(i))
             self.entry_path[i].bind('<Shift-Tab>', self.make_func_move_to(i, 5, 0))
@@ -819,12 +882,29 @@ class EntryFrameSimple(ttk.Frame):
         return self
 
     def make_func_clear_line(self, i):
+        '''
+        各entry_pathをクリアするメソッド
+
+        Parameters
+        ----------
+        i: int
+            entry_pathのindex
+        '''
         def func_clear_line(event=None):
             self.entry_path[i].delete(0, 'end')
             return 'break'
         return func_clear_line
 
     def make_func_select_line(self, i):
+        '''
+        各entry_pathの中身を選択するメソッド
+        tk.Entryではctrl+aがデフォルトでは効かないため実装
+
+        Parameters
+        ----------
+        i: int
+            entry_pathのindex
+        '''
         def func_select_line(event=None):
             self.entry_path[i].select_range(0, 'end')
             self.entry_path[i].icursor('end')
@@ -833,7 +913,19 @@ class EntryFrameSimple(ttk.Frame):
 
     def make_func_move_to(self, now, total, direction):
         '''
+        tabやshift+tabで各entry_pathを行き来するためのメソッド
+        tkinterデフォルトではボタンなどのウィジェットに移動してしまう
+        最下段のentryでtabすると最上段に戻る
         direction: 1-next, 0-back
+
+        Parameters
+        ----------
+        now: int
+            今のindex
+        total: int
+            entry_pathの数。あいうえお口パクでは6つあるため
+        direction: int
+            shift+tabの時は逆順に回る
         '''
         if direction:
             next_num = now+1 if now < total-1 else 0
@@ -847,7 +939,10 @@ class EntryFrameSimple(ttk.Frame):
 
         return func_move_to_back
 
-    def make_layer_blanket(self):
+    def make_script_w_blanket(self):
+        '''
+        entry_pathの中身から目パチ口パクスクリプトを生成
+        '''
         sep = ''
         script = '{'
         for i in range(4, -1, -1):
@@ -860,6 +955,17 @@ class EntryFrameSimple(ttk.Frame):
 
 
 class EntryFrameAIUEO(EntryFrameSimple):
+    '''
+    あいうえお口パクの入力欄のフレーム
+    Simpleと大体同じ
+
+    Attributes
+    ----------
+    entry_path: list of tk.Entry
+        レイヤーのパスを入力する欄
+    button_clearline: list of tk.Button
+        各entry_pathをクリアするボタン
+    '''
 
     def make_widgets(self):
         annotation = ['あ', 'い', 'う', 'え', 'お', 'ん']
@@ -880,7 +986,7 @@ class EntryFrameAIUEO(EntryFrameSimple):
             self.button_clearline[i].grid(row=i, column=2, padx=6, pady=6)
         return self
 
-    def make_layer_blanket(self):
+    def make_script_w_blanket(self):
         chars = ['a', 'i', 'u', 'e', 'o', 'N']
         sep = ''
         script = '{'
@@ -894,6 +1000,16 @@ class EntryFrameAIUEO(EntryFrameSimple):
 
 
 class TextFrame(ttk.Frame):
+    '''
+    目パチ口パク補助タブの下の出力欄フレーム
+
+    Attributes
+    ----------
+    text: tk.Text
+        出力欄
+    button_copytext/del1line/cleartext: tk.Button
+        中身コピー、1行削除、全部削除のボタン
+    '''
     def __init__(self, master=None, **kwargs):
         super().__init__(master, **kwargs)
         self.make_widgets()
@@ -914,21 +1030,33 @@ class TextFrame(ttk.Frame):
         return self
 
     def copytext(self, event=None):
+        '''
+        出力欄の中身をクリップボードにコピー
+        '''
         content = self.text.get('1.0', 'end-1c')
         pyperclip.copy(content)
         return 'break'
 
     def gettext(self, event=None):
+        '''
+        出力欄の中身を変換
+        '''
         content = self.text.get('1.0', 'end-1c')
         return content
 
     def del1line_text(self, event=None):
+        '''
+        出力欄の中の1行を削除
+        '''
         self.text.config(state='normal')
         self.text.delete('end-2l', 'end-1c')
         self.text.config(state='disabled')
         return 'break'
         
     def clear_text(self, event=None):
+        '''
+        出力欄の中を全部削除
+        '''
         self.text.config(state='normal')
         self.text.delete('1.0', 'end')
         self.text.config(state='disabled')
@@ -942,6 +1070,9 @@ class TextFrame(ttk.Frame):
 
 
 class MPOptionFrame(ttk.Frame):
+    '''
+    目パチのオプションのフレーム
+    '''
 
     def __init__(self, master=None, **kwargs):
         super().__init__(master, **kwargs)
@@ -962,6 +1093,10 @@ class MPOptionFrame(ttk.Frame):
         return self
 
     def get_option(self):
+        '''
+        オプションの数値を、スクリプトですぐ使える文字列に加工して変換
+        例）,4,1,0
+        '''
         option = ''
         for entry in self.entry_option:
             option += ',' + entry.get().strip()
@@ -969,6 +1104,9 @@ class MPOptionFrame(ttk.Frame):
         
 
 class KPOptionFrame(ttk.Frame):
+    '''
+    口パクのオプションのフレーム
+    '''
 
     def __init__(self, master=None, **kwargs):
         super().__init__(master, **kwargs)
@@ -988,6 +1126,10 @@ class KPOptionFrame(ttk.Frame):
         return self
 
     def get_option(self):
+        '''
+        オプションの数値を、スクリプトですぐ使える文字列に加工して変換
+        例）,1,true
+        '''
         option = f',{self.entry_consonant.get().strip()},{"true" if self.bool_option.get() else "false"}'
         return option
 
@@ -1028,11 +1170,15 @@ class ScriptBook(ttk.Notebook):
         return self
 
     def make_func_addline(self):
+        '''
+        目パチ口パク出力欄にentry_から生成された行を挿入するメソッドを生成
+        1行ごとの操作をうまくするために、行末に余分な改行を挿入
+        '''
         option = ['Blinker', 'LipSyncSimple', 'LipSyncLab']
         def func_addline(event=None):
             i = self.index(self.select())
             script = f'  require("PSDToolKit").{option[i]}'
-            script += f'.new({self.frame_entry[i].make_layer_blanket()}{self.frame_option[i].get_option()}),'
+            script += f'.new({self.frame_entry[i].make_script_w_blanket()}{self.frame_option[i].get_option()}),'
             self.frame_text[i].addline(script)
             return 'break'
         return func_addline
@@ -1041,6 +1187,9 @@ class ScriptBook(ttk.Notebook):
         return self.frame_text[i].gettext()
 
     def reset_form(self):
+        '''
+        入出力欄を全てクリア
+        '''
         for frame in self.frame_entry:
             for entry in frame.entry_path:
                 entry.delete(0, 'end')
@@ -1056,22 +1205,28 @@ class TrackNumberDialog(tk.Toplevel):
 
     Attributes
     ----------
-    track_blink_eye: int
-        目パチスクリプトの挿入先トラック。挿入しない場合は-1
-    track_lipsync_oc: int
-        口パク(開閉のみ)スクリプトの挿入先トラック。挿入しない場合は-1
-    track_lipsync_aiueo: int
-        口パク(あいうえお)スクリプトの挿入先トラック。挿入しない場合は-1
+    combo_tracks: list of ttk.Combobox
+        目パチや口パクをどのトラックに挿入するか選ぶプルダウンメニュー
+        __init__のgroupsパラメータから生成
+    track_destination: int
+        目パチ口パクを挿入する対象trackの番号
+        -1だと挿入しない
     is_ok: bool
         「書き出す」ボタンが押された状態で終了したか
-    entry_track_blink_eye: tk.Entry
-        目パチのトラック番号の入力フォーム
-    entry_track_lipsync_oc: tk.Entry
-        口パク(開閉のみ)のトラック番号の入力フォーム
-    entry_track_lipsync_aiueo: tk.Entry
-        口パク(あいうえお)のトラック番号の入力フォーム
+
+    Notes:
+    -----
+    combo_tracksをcurrentで取得すると0から始まる静数列になるため
+    track_destinationはcombo_tracks[i].current()-1にする
     '''
     def __init__(self, master=None, groups=[], **kwargs):
+        '''
+        Parameters
+        ----------
+        groups: list of PSD.layer
+            .anm書き出し対象レイヤーのグループ
+            この情報からcombo_tracksを生成
+        '''
         # super(TrackNumberDialog, self).__init__()
         super().__init__(master, **kwargs)
         self.combovalues = ['挿入しない'] + [f'track{i}: {layer.name}' for i, layer in enumerate(groups)]
@@ -1111,6 +1266,10 @@ class TrackNumberDialog(tk.Toplevel):
         return self
 
     def close_dialog(self):
+        '''
+        combo_tracksをcurrentで取得すると0から始まる静数列になるため
+        track_destinationはcombo_tracks[i].current()-1にする
+        '''
         for i in range(3):
             self.track_destination[i] = self.combo_tracks[i].current() - 1
         self.is_ok = True
@@ -1262,6 +1421,8 @@ class RootWindow(tk.Tk):
         self.set_combo_level = self.frame_ctrl.set_combo_level
         self.get_condition = self.frame_ctrl.get_condition
         self.button_converts = self.frame_ctrl.button_converts
+        self.entry_arbitrary = self.frame_ctrl.entry_arbitrary
+        self.get_str_arbitrary = self.frame_ctrl.entry_arbitrary.get
 
         self.stack_anmlayers = self.frame__anm.stack_anmlayers
         self.pop_anmlayers = self.frame__anm.pop_anmlayers
@@ -1270,6 +1431,7 @@ class RootWindow(tk.Tk):
         self.get_anmtail = self.frame__anm.get_anmtail
         self.button_clears = self.frame__anm.button_clears
         self.bool_pachipaku = self.frame__anm.bool_pachipaku
+        self.bool_deeplayer = self.frame__anm.bool_deeplayer
         self.button_exports = self.frame__anm.button_exports
 
         self.button_foldall = self.frame_show.button_foldall
@@ -1304,7 +1466,9 @@ class RootWindow(tk.Tk):
         self.menu_edit.add_separator()
         self.menu_edit.add_command(label='戻す', accelerator='Ctrl+z')
         self.menu_edit.add_command(label='やり直す', accelerator='Ctrl+y / Ctrl+Shift+z')
-        for i in [0, 1, 2, 4, 5]:
+        self.menu_edit.add_separator()
+        self.menu_edit.add_command(label='自由編集', accelerator='F12')
+        for i in [0, 1, 2, 4, 5, 7]:
             self.menu_edit.entryconfig(i, state='disabled')
 
         self.menu_help= tk.Menu(self.menu_root, tearoff=0)
@@ -1345,5 +1509,8 @@ class test():
             return test.func(i)
 
 if __name__ == '__main__':
+    '''
+    開発者テスト用
+    '''
     root = RootWindow()
     root.mainloop()

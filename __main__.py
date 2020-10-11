@@ -15,6 +15,19 @@ import tkinter.messagebox as mb
 URL = 'https://github.com/662611034/psd_fairu_no_reiyaa_no_namae_no_mae_ni_bikkuri_maaku_ya_asutarisuku_wo_ikkatsu_de_tsukeru_puroguramu'
 
 def prohibit_to_doublebyte(string):
+    '''
+    入力文字列の中に含まれるWindowsでの禁止文字を全角に置換
+
+    Parameters
+    ----------
+    string: str
+        入力文字列
+
+    Returns
+    -------
+    string_mod: str
+        置換された文字列
+    '''
     prohibitted = ['\\', '/', ':', '*', '?', '"', '<', '>', '|']
     alternative = ['￥', '／', '：', '＊', '？', '”', '＜', '＞', '｜']
     string_mod = string
@@ -189,6 +202,8 @@ class AppTop(gui.RootWindow):
         psdファイルインスタンス
     flag_saved: bool
         変換動作をして保存したかどうか
+    flag_freeedit: bool
+        今自由編集モードか否か
     logger: Logger
         「戻す」と「やり直す」用のログ管理インスタンス
     dict_names: dict
@@ -205,6 +220,7 @@ class AppTop(gui.RootWindow):
 
         self.psd = None
         self.flag_saved = True
+        self.flag_freeedit = False
         self.logger = Logger()
         self.dict_names = {}
 
@@ -218,7 +234,7 @@ class AppTop(gui.RootWindow):
         f_save = [self.make_callback(self.save_file, i) for i in range(2)]
         f_expo = [self.make_callback(self.export_script, i) for i in range(2)]
 
-        f_conv = [self.make_callback(self.convert, i) for i in range(3)]
+        f_conv = [self.make_callback(self.convert, i) for i in range(5)]
         f_unre = [self.make_callback(self.undoredo, i) for i in range(2)]
 
         f_clea = [self.make_callback(self.deal_anmlayer, i+1) for i in range(2)]  # clear 1 or all
@@ -226,6 +242,8 @@ class AppTop(gui.RootWindow):
         f_sela = [self.make_callback(self.select_all, i) for i in range(2)]  # select all
 
         f_fold = [self.make_callback(self.fold_all, i) for i in range(2)]
+
+        f_fedt = self.make_callback(self.toggle_freeedit)
 
         self.menu_file.entryconfig(0, command=f_open)
         self.menu_file.entryconfig(1, command=f_save[0])
@@ -239,11 +257,12 @@ class AppTop(gui.RootWindow):
         self.menu_edit.entryconfig(2, command=f_conv[2])
         self.menu_edit.entryconfig(4, command=f_unre[0])
         self.menu_edit.entryconfig(5, command=f_unre[1])
+        self.menu_edit.entryconfig(7, command=f_fedt)
 
         self.menu_help.entryconfig(0, command=gui.HelpWindow)
         self.menu_help.entryconfig(1, command=lambda : webbrowser.open(URL))
 
-        for i in range(3):
+        for i in range(5):
             self.button_converts[i].config(command=f_conv[i])
         for i in range(2):
             self.button_clears[i].config(command=f_clea[i])
@@ -261,6 +280,7 @@ class AppTop(gui.RootWindow):
         self.bind_all('<Key-F5>', f_conv[0])
         self.bind_all('<Key-F6>', f_conv[1])
         self.bind_all('<Key-F7>', f_conv[2])
+        self.bind_all('<Key-F12>', f_fedt)
         self.bind_all('<Control-z>', f_unre[0])
         self.bind_all('<Control-Z>', f_unre[1])
         self.bind_all('<Control-y>', f_unre[1])
@@ -358,6 +378,10 @@ class AppTop(gui.RootWindow):
             mb.showwarning('ファイルがありません', 'まずはファイルを開いてください')
             return 'break'
 
+        if self.flag_freeedit:
+            self.show_msg('自由編集中は保存できません')
+            return 'break'
+
         if mode == 0:
             ofile_path = self.ifile_path
             msg = '上書き保存されました'
@@ -389,6 +413,10 @@ class AppTop(gui.RootWindow):
         '''
         if not self.psd:
             mb.showwarning('ファイルがありません', 'まずはファイルを開いてください')
+            return 'break'
+
+        if self.flag_freeedit:
+            self.show_msg('自由編集中は書き出しできません')
             return 'break'
 
         if not self.flag_saved:
@@ -436,6 +464,10 @@ class AppTop(gui.RootWindow):
             mb.showwarning('ファイルがありません', 'まずはファイルを開いてください')
             return 'break'
 
+        if self.flag_freeedit:
+            self.show_msg('自由編集中は書き出しできません')
+            return 'break'
+
         if not self.flag_saved:
             self.save_file(None, 0)
 
@@ -479,6 +511,9 @@ class AppTop(gui.RootWindow):
         # 0: undo, 1: redo
         if self.logger.is_empty(mode):
             return 'break'
+        if self.flag_freeedit:
+            self.show_msg('自由編集中その操作はできません')
+            return 'break'
 
         self.cache_names()
         self.logger.stack_at(self.dict_names, 1-mode)
@@ -510,6 +545,9 @@ class AppTop(gui.RootWindow):
         '''
         if not self.psd:
             mb.showwarning('ファイルがありません', 'まずはファイルを開いてください')
+            return 'break'
+        if self.flag_freeedit:
+            self.show_msg('自由編集中は変換できません')
             return 'break'
 
         self.cache_names()
@@ -580,10 +618,43 @@ class AppTop(gui.RootWindow):
         return self
 
     def fold_all(self, event, mode):
+        '''
+        全て畳む/展開するメソッドを生成
+        tk.Buttonのcommandに割り当てるためにメソッドを変換するようにしてる
+        '''
         for layer in self.psd.all_layers():
             if layer.is_group():
                 target = self.frame_show.dict_widgets[id(layer)]['subframe']
                 target.pack_forget() if mode else target.pack()
+        return 'break'
+
+    def toggle_freeedit(self, event):
+        '''
+        自由編集モードの切り替え
+        レイヤー名のentryを全てstate=normalにするだけ
+        自由編集モードに入るとき現在の状態をバックログに保存する
+        '''
+        if not self.psd:
+            return 'break'
+
+        if self.flag_freeedit:
+            for layer in self.psd.all_layers():
+                entry_target = self.frame_show.dict_widgets[id(layer)]['entry']
+                entry_target.config(state='readonly')
+            self.unre_state(0, 1).unre_state(1, 0)
+
+        else:
+            self.cache_names()
+            self.logger.stack_at(self.dict_names, 0)
+            self.logger.reset(1)
+            for layer in self.psd.all_layers():
+                entry_target = self.frame_show.dict_widgets[id(layer)]['entry']
+                entry_target.config(state='normal')
+            self.unre_state(0, 0).unre_state(1, 0)
+
+        self.flag_saved = False
+        self.flag_freeedit = not self.flag_freeedit
+
         return 'break'
 # to here, callback funcs
 
@@ -627,7 +698,7 @@ class AppTop(gui.RootWindow):
 
         for i in [1, 2, 4, 5]:
             self.menu_file.entryconfig(i, state='normal')
-        for i in [0, 1, 2, 4, 5]:
+        for i in [0, 1, 2, 4, 5, 7]:
             self.menu_edit.entryconfig(i, state='normal')
 
         self.unre_state(0, 0).unre_state(1, 0)
@@ -758,9 +829,15 @@ class AppTop(gui.RootWindow):
         efile_path: str
             書き出す.anmファイルのパス
         '''
+        
+        # bool_deeplayerによってanmscriptのメソッドが変わる
+        func_anmscript = \
+                self.psd.export_anmscript_deep if self.bool_deeplayer.get() \
+                else self.psd.export_anmscript
+
         tracklines, valuelines = '', ''
         for tracknum, layer in enumerate(anmlayers):
-            trackline, valueline = self.psd.export_anmscript(layer, tracknum)
+            trackline, valueline = func_anmscript(layer, tracknum)
             for which, destination in enumerate(track_destination):
                 # which: 0-目パチ、1-口パクシンプル、2-口パクあいうえお
                 if destination == tracknum:
@@ -795,6 +872,11 @@ class AppTop(gui.RootWindow):
             対象レイヤー
         mode: int
             変換モード。0: 「!」をつける、1: 「*」をつける、2: 記号を消す
+            3: 任意文字列を前に挿入、4: 任意文字列を後ろに挿入
+
+        Notes
+        -----
+        modeのif-else文、もう少しスマートにできないものだろうか
         '''
         entry_target = self.frame_show.dict_widgets[id(layer)]['entry']
         entry_target.config(state='normal')
@@ -805,6 +887,10 @@ class AppTop(gui.RootWindow):
         elif mode == 2:
             while entry_target.get()[0:1] in symbols:
                 entry_target.delete(0, 1)
+        elif mode == 3:
+            entry_target.insert(0, self.get_str_arbitrary())
+        elif mode == 4:
+            entry_target.insert('end', self.get_str_arbitrary())
         entry_target.config(state='readonly')
         return self
 
@@ -892,5 +978,4 @@ class AppTop(gui.RootWindow):
         return self
 
 
-root = AppTop()
-root.mainloop()
+AppTop().mainloop()

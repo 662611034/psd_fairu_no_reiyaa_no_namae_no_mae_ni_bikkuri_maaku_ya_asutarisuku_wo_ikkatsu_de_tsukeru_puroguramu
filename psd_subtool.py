@@ -46,23 +46,20 @@ class PSDImageExt(psd_tools.PSDImage):
 
         psd.fullpath = '/'
         psd.level = 0
-        for layer in psd.all_layers():
-            layer.fullpath = psd.layer_fullpath(layer)
         return psd
 
     def assign_fullpath(self):
+        '''
+        全てのレイヤーにフルパスを振りなおす
+        fullpathはプログラム上で任意に割り当ててるため、レイヤー名を変えたら振りなおさなければならない
+        '''
         for layer in self.all_layers():
             layer.fullpath = self.layer_fullpath(layer)
         return self
 
     def assign_layerinfo(self):
         '''
-        最大階層を調べるメソッド
-        all_layersを実行し、階層の最大値を調べる
-
-        Returns
-        -------
-        level_max: int
+        最大階層を調べると同時に全てのレイヤーにフルパスを割り当てる
         '''
 
         self.level_max = 0
@@ -116,7 +113,7 @@ class PSDImageExt(psd_tools.PSDImage):
         いらない場合は適当な値を入れても特に問題ない
         '''
         if layer.is_group():
-            for sublayer in layer:
+            for sublayer in reversed(layer):  # reversedしないとpsdをフォトショなどで開いたときとは逆順になる
                 sublevel = level + 1
                 yield sublayer, sublevel
                 for subsublayer, subsublevel in cls.sublayers_recursive(sublayer, sublevel):
@@ -130,8 +127,6 @@ class PSDImageExt(psd_tools.PSDImage):
         -------
         layer: psd_tools.api.layers.Group / PixelLayer
             psdファイルに属するレイヤーやグループ
-        level: int
-            階層
 
         Notes
         -----
@@ -184,6 +179,9 @@ class PSDImageExt(psd_tools.PSDImage):
 
         fullpath = layer.name + path
 
+        '''
+        以下は全角チルダ問題など特殊文字のエラー対応
+        '''
         # 半角スペース( )問題に対する対処
         fullpath = fullpath.replace(' ', '%20')
         # 全角チルダ(～)問題に対する対処
@@ -233,7 +231,43 @@ class PSDImageExt(psd_tools.PSDImage):
 
         trackline = f'--track{tracknum}:{layer.name},0,{len(layer)},0,1\n'
         valueline = 'local values = {\n'
-        for sublayer in layer:
+        for sublayer in reversed(layer):
+            fullpath = self.layer_fullpath(sublayer)
+            valueline += f'  "v1.{fullpath}",\n'
+        valueline += '}\n'
+        valueline += f'PSD:addstate(values, obj.track{tracknum})\n'
+
+        return trackline, valueline
+
+
+    def export_anmscript_deep(self, layer, tracknum=0):
+        '''
+        .anmスクリプトを生成するメソッド
+        直下のレイヤーではなく、下位のレイヤー(グループ以外)全てを書き出す
+
+        Parameters
+        ----------
+        layer: psd_tools.api.layers.Group / PixelLayer
+            スライダー化したいレイヤーがまとめられているグループ
+            layerがグループでなければメソッドは改行のみを返す
+        tracknum: int
+            .anmで0, 1, 2, 3とつく番号
+
+        Returns
+        -------
+        trackline: str
+            「--trackなんたら」の文字列
+        valueline: str
+            「local values なんたら」から「PSD:addstateかんたら」のところまでの文字列
+        '''
+        if not layer.is_group():
+            return '\n', '\n'
+
+        sublayers = [sublayer for sublayer, _ in self.sublayers_recursive(layer) if not sublayer.is_group()]
+
+        trackline = f'--track{tracknum}:{layer.name},0,{len(sublayers)},0,1\n'
+        valueline = 'local values = {\n'
+        for sublayer in sublayers:
             fullpath = self.layer_fullpath(sublayer)
             valueline += f'  "v1.{fullpath}",\n'
         valueline += '}\n'
@@ -243,10 +277,7 @@ class PSDImageExt(psd_tools.PSDImage):
 
 
 if __name__ == '__main__':
-    ifile = r'/home/h6626/Downloads/im5467479.psd'
+    ifile = r'C:\Users\h6626\Downloads\あかりちゃん立ち絵\あかりちゃん立ち絵_mod.psd'
     psd0 = PSDImageExt.open(ifile, encoding='sjis')
-    t, v = psd0.export_anmscript(psd0[2])
-    with open('track.txt', 'w') as f:
-        f.write(t)
-    with open('value.txt', 'w') as f:
-        f.write(v)
+    print(psd0.export_layers())
+
