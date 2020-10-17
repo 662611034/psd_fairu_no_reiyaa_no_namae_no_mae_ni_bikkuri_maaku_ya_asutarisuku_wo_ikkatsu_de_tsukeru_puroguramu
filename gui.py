@@ -180,7 +180,7 @@ class FileFrame(ttk.Frame):
         self.label_msg = tk.Label(self, text='')
         self.label_filename = ttk.Label(self, text='作業中のファイルはありません', width=60)
 
-        encodes = ['sjis', 'cp932', 'euc_jp', 'macroman', 'utf_8', 'utf_16', 'utf_32']
+        encodes = ['cp932','sjis', 'euc_jp', 'macroman', 'utf_8', 'utf_16', 'utf_32']
         self.combo_encode = ttk.Combobox(self, values=encodes, width=12, state='readonly')
         self.combo_encode.current(0)
         self.combo_encode.grid(row=0, column=0, padx=6, pady=6, sticky='w')

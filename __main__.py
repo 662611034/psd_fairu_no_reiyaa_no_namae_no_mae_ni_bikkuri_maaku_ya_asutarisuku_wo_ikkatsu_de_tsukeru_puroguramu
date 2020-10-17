@@ -848,7 +848,7 @@ class AppTop(gui.RootWindow):
             tracklines += trackline
             valuelines += '\n' + valueline
 
-        with open(efile_path, mode='w', encoding='sjis') as fout:  # or cp932
+        with open(efile_path, mode='w', encoding='cp932') as fout:  # sjisでは丸文字がエラーになることがあった
             fout.write(tracklines)
             fout.write(valuelines)
 
