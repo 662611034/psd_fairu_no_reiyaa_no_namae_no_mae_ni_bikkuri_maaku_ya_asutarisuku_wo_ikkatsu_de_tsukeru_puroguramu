@@ -831,7 +831,7 @@ class ShowFrame(ttk.Frame):
         frame_tmp: tk.Frame
             再帰的に配置されたレイヤー構造ウィジェットの最上位フレーム
         '''
-        if not layer:
+        if layer == None:
             return ttk.Frame(master)
         
         frame_tmp = LayerFrame(master, layer)
