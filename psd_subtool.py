@@ -277,7 +277,7 @@ class PSDImageExt(psd_tools.PSDImage):
 
 
 if __name__ == '__main__':
-    ifile = r'C:\Users\h6626\Downloads\あかりちゃん立ち絵\あかりちゃん立ち絵_mod.psd'
+    ifile = r'hoge.psd'
     psd0 = PSDImageExt.open(ifile, encoding='sjis')
     print(psd0.export_layers())
 
