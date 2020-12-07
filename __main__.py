@@ -5,6 +5,7 @@
 import traceback
 import webbrowser
 import os
+import sys
 import copy
 import gui
 import psd_subtool
@@ -334,7 +335,7 @@ class AppTop(gui.RootWindow):
 
         return f_callback
 
-    def open_file(self, event):
+    def open_file(self, event, arg_file_path = ''):
         '''
         ファイルを開くコールバック
         ファイルを開く動作の主体はsubfuncである
@@ -346,7 +347,11 @@ class AppTop(gui.RootWindow):
         event: tk.Event
             このメソッドでは使われない
         '''
-        ifile_path = fd.askopenfilename(filetypes=[('psd files', '*.psd')])
+        ifile_path = ''
+        if  len(arg_file_path) > 4:
+        	ifile_path = arg_file_path
+        else:
+        	ifile_path = fd.askopenfilename(filetypes=[('psd files', '*.psd')])
         if not ifile_path:
             return 'break'
         if ifile_path[-4:] != '.psd':
@@ -979,5 +984,7 @@ class AppTop(gui.RootWindow):
             entry_target.config(state='readonly')
         return self
 
-
-AppTop().mainloop()
+app = AppTop()
+if len(sys.argv) >= 2:
+	app.open_file(None, sys.argv[1])
+app.mainloop()
