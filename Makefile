@@ -8,5 +8,5 @@ today = ${shell date '+%y%m%d'}
 title = psd_fairu_no_reiyaa_no_namae_no_mae_ni_bikkuri_maaku_ya_asutarisuku_wo_ikkatsu_de_tsukeru_puroguramu_${today}.exe
 
 exe:
-	pyinstaller -F --noupx --clean __main__.py --name ${title}
+	pyinstaller --noconsole -F --noupx --clean __main__.py --name ${title}
 	mv --update --verbose ./dist/${title} .
