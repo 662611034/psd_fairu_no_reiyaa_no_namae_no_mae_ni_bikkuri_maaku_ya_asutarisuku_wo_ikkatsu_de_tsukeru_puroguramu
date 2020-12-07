@@ -9,5 +9,5 @@ set COMMAND2=\"%%1\"
 set COMMAND3=%COMMAND1% %COMMAND2%
 echo %COMMAND1% %COMMAND2%
 
-reg add "HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.aup\Shell\コモンズ素材の一覧を生成する" /v "Icon" /t REG_SZ /d "%APP_PATH%" /f
+rem reg add "HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.aup\Shell\コモンズ素材の一覧を生成する" /v "Icon" /t REG_SZ /d "%APP_PATH%" /f
 reg add "HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\.aup\Shell\コモンズ素材の一覧を生成する\command" /ve /t REG_SZ /d "%COMMAND3%" /f
