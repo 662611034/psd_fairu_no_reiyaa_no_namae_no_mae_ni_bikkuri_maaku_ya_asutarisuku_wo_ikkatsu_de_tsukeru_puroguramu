@@ -48,6 +48,8 @@
 - [2020.10.03](https://github.com/662611034/psd_fairu_no_reiyaa_no_namae_no_mae_ni_bikkuri_maaku_ya_asutarisuku_wo_ikkatsu_de_tsukeru_puroguramu/releases/download/201002/psd_fairu_no_reiyaa_no_namae_no_mae_ni_bikkuri_maaku_ya_asutarisuku_wo_ikkatsu_de_tsukeru_puroguramu_201002.zip)
   - プログラムの更新はありませんが、ダウンロードリンクをgithubに一元化しました
   - 今後の更新履歴はgithubの[release](https://github.com/662611034/psd_fairu_no_reiyaa_no_namae_no_mae_ni_bikkuri_maaku_ya_asutarisuku_wo_ikkatsu_de_tsukeru_puroguramu/releases)の方にアップロードされます
+- [2020.12.07](#)
+  - PSDファイルの右クリックメニューから開けるようにしました (by istallia)
  
   
 # 使い方
@@ -66,6 +68,9 @@
 - 画面上段左側のプルダウンメニューでファイルを開くとき使う文字コードを選ぶことができます。
 - ファイルを上書き保存するときは開いたときの(もし別名保存していればその時用いた)文字コードで保存されます
 - 別名で保存する場合は選択されている文字コードで保存されます
+- 右クリックメニューから起動すると、そのPSDファイルを開いた状態で始められます
+  - 仕様上、この方法で読み込む場合は文字コードが(おそらく`cp932`で)固定となります
+  - 右クリックメニューに登録するには`regist.bat`を管理者権限で実行してください。不要になったときは`remove.bat`を管理者権限で実行すると削除できます
 
 ## レイヤー名の変換
 - チェックを入れたレイヤーの名前が変換されます
