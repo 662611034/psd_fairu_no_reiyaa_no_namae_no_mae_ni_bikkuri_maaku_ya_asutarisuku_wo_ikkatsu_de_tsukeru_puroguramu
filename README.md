@@ -50,6 +50,8 @@
   - 今後の更新履歴はgithubの[release](https://github.com/662611034/psd_fairu_no_reiyaa_no_namae_no_mae_ni_bikkuri_maaku_ya_asutarisuku_wo_ikkatsu_de_tsukeru_puroguramu/releases)の方にアップロードされます
 - [2020.12.07](#)
   - PSDファイルの右クリックメニューから開けるようにしました (by istallia)
+- [2021.02.16](https://github.com/662611034/psd_fairu_no_reiyaa_no_namae_no_mae_ni_bikkuri_maaku_ya_asutarisuku_wo_ikkatsu_de_tsukeru_puroguramu/releases/tag/210216)
+  - 別名で保存する際指定した文字コードではなくcp932が適用される問題を修正しました
  
   
 # 使い方
