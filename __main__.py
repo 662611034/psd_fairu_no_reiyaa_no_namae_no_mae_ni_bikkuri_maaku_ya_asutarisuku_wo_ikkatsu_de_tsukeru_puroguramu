@@ -810,7 +810,7 @@ class AppTop(gui.RootWindow):
         for layer in self.psd.all_layers():
             layer.name = self.frame_show.dict_widgets[id(layer)]['entry'].get()
 
-        self.psd.save(ofile_path, encoding)
+        self.psd.save(ofile_path, encoding=encoding)
 
         self.flag_saved = True
         self.ifile_path = ofile_path
