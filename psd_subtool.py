@@ -177,13 +177,20 @@ class PSDImageExt(psd_tools.PSDImage):
         if type(layer._parent) is type(self) and not (layer._parent is self):
             raise Exception('The layer is not a part of the psd')
 
-        fullpath = layer.name + path
+        # 現在のレイヤー名をパスに追加
+        # & スラッシュ(/)に対する対処 (追加前にやっておかないといけない)
+        escaped_name = layer.name.replace('/', '%2f')
+        fullpath     = escaped_name + path
 
         '''
         以下は全角チルダ問題など特殊文字のエラー対応
         '''
         # 半角スペース( )問題に対する対処
         fullpath = fullpath.replace(' ', '%20')
+        # エスケープ文字(\)に対する対処
+        fullpath = fullpath.replace('\\', '%5c')
+        # スラッシュ(/)に対する対処
+        # fullpath = fullpath.replace('/', '%2f')
         # 全角チルダ(～)問題に対する対処
         # fullpath = fullpath.replace(chr(0xff5e), chr(0x301c))
         # 全角マイナス(－)問題の対処
@@ -198,6 +205,18 @@ class PSDImageExt(psd_tools.PSDImage):
         # fullpath = fullpath.replace(chr(0x2015), chr(0x2014))
         # 平行記号(∥)問題の対処
         # fullpath = fullpath.replace(chr(0x2225), chr(0x2016))
+        # ダメ文字に対する対処 (リストはPSDToolkitの`/src/go/img/prop/prop.go`から拝借)
+        damemoji_list = {
+            '―': 0  ,'ソ': 1  ,'Ы': 2  ,'Ⅸ': 3  ,'噂': 4  ,'浬': 5  ,'欺': 6  ,'圭': 7  ,
+            '構': 8  ,'蚕': 9  ,'十': 10 ,'申': 11 ,'曾': 12 ,'箪': 13 ,'貼': 14 ,'能': 15 ,
+            '表': 16 ,'暴': 17 ,'予': 18 ,'禄': 19 ,'兔': 20 ,'喀': 21 ,'媾': 22 ,'彌': 23 ,
+            '拿': 24 ,'杤': 25 ,'歃': 26 ,'濬': 27 ,'畚': 28 ,'秉': 29 ,'綵': 30 ,'臀': 31 ,
+            '藹': 32 ,'觸': 33 ,'軆': 34 ,'鐔': 35 ,'饅': 36 ,'鷭': 37 ,'纊': 38 ,'犾': 39 ,
+            '偆': 40 ,'砡': 41 ,
+        }
+        rune_list = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_'
+        for i, damemoji in enumerate(damemoji_list):
+            fullpath = fullpath.replace(damemoji, f'%x{rune_list[i]}')
 
         if layer._parent is self:
             return fullpath

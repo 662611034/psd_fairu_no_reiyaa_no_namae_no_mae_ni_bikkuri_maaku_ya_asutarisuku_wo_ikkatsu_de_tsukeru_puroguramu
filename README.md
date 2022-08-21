@@ -52,6 +52,8 @@
   - PSDファイルの右クリックメニューから開けるようにしました (by istallia)
 - [2021.02.16](https://github.com/662611034/psd_fairu_no_reiyaa_no_namae_no_mae_ni_bikkuri_maaku_ya_asutarisuku_wo_ikkatsu_de_tsukeru_puroguramu/releases/tag/210216)
   - 別名で保存する際指定した文字コードではなくcp932が適用される問題を修正しました
+- [2022.08.11](#)
+  - エスケープ文字、スラッシュ、ダメ文字に対する対処を追加
  
   
 # 使い方
@@ -182,3 +184,7 @@ Windows以外の環境の方はこれらのファイルと必要なパッケー�
 
 ## ビルド
 pyinstallerを用いて64bit Windows 10でビルドしました。
+
+## その他
+Copyright (c) 2017 oov (The MIT License (MIT))
+ダメ文字に対する対処のため、PSDToolkitのダメ文字リストを拝借しました。
